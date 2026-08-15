@@ -1,0 +1,31 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #111;
+  color: #fafafa;
+}
+
+.polaroid {
+  position: absolute;
+  background: #fff;
+  padding: 10px 10px 32px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  width: 160px;
+}
+
+.polaroid img {
+  width: 100%;
+  display: block;
+}
+
+.polaroid .caption {
+  color: #222;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 6px;
+  font-family: 'Comic Sans MS', cursive;
+}
