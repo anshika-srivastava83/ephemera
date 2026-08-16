@@ -69,7 +69,6 @@ export default function WallPage({ params }) {
             }}
           >
             <img src={s.polaroid_url} alt={s.caption} />
-            <div className="caption">{s.caption}</div>
           </div>
         );
       })}
