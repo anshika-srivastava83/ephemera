@@ -34,6 +34,39 @@ export default function OwnerDashboard() {
     setStatus('QR closed. No more submissions will be accepted.');
   }
 
+  async function disposePhotos() {
+    if (!confirm('This will permanently delete all photos for this event. Continue?')) return;
+    setStatus('Disposing photos...');
+    const res = await fetch(`/api/events/${event.id}/dispose`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ownerPassword: password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(`Error: ${data.error}`);
+      return;
+    }
+    setStatus('Photos disposed.');
+  }
+
+  async function deleteWall() {
+    if (!confirm('This will permanently delete this event and its wall. This cannot be undone. Continue?')) return;
+    setStatus('Deleting wall...');
+    const res = await fetch(`/api/events/${event.id}/delete-wall`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ownerPassword: password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(`Error: ${data.error}`);
+      return;
+    }
+    setEvent(null);
+    setStatus('Wall deleted.');
+  }
+
   const submitUrl = event
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/event/${event.id}/submit`
     : '';
@@ -65,6 +98,16 @@ export default function OwnerDashboard() {
             Next: go to <a href={`/owner/event/${event.id}/moderate`}>the moderation screen</a> to
             swipe through submissions.
           </p>
+
+          <div style={{ marginTop: 24, borderTop: '1px solid #444', paddingTop: 16 }}>
+            <p style={{ fontSize: 13, opacity: 0.8 }}>Danger zone</p>
+            <button onClick={disposePhotos} style={{ marginRight: 12 }}>
+              Dispose photos
+            </button>
+            <button onClick={deleteWall}>
+              Delete wall
+            </button>
+          </div>
         </div>
       )}
 
