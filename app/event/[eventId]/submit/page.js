@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { supabasePublic } from '../../../../lib/supabaseClient';
+import { compositePolaroid } from '../../../../lib/compositePolaroid';
 
 const CAPTION_LIMIT = 120;
 
@@ -46,10 +47,20 @@ export default function SubmitPage({ params }) {
     const { data: publicUrlData } = supabasePublic.storage.from('photos').getPublicUrl(path);
     const photoUrl = publicUrlData.publicUrl;
 
-    // NOTE: polaroid compositing (photo + caption -> framed image) and
-    // photo-edit filters both come later. For now the raw photo is reused
-    // as the polaroid image so the rest of the pipeline can be tested.
-    const polaroidUrl = photoUrl;
+    setStatus('Creating your polaroid...');
+    const polaroidBlob = await compositePolaroid(file, caption);
+    const polaroidPath = `${eventId}/polaroid-${Date.now()}.jpg`;
+    const { error: polaroidUploadError } = await supabasePublic.storage
+      .from('photos')
+      .upload(polaroidPath, polaroidBlob);
+    if (polaroidUploadError) {
+      setStatus(`Polaroid creation failed: ${polaroidUploadError.message}`);
+      return;
+    }
+    const { data: polaroidUrlData } = supabasePublic.storage
+      .from('photos')
+      .getPublicUrl(polaroidPath);
+    const polaroidUrl = polaroidUrlData.publicUrl;
 
     setStatus('Saving...');
     const res = await fetch('/api/submissions', {
