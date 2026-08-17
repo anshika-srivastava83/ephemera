@@ -108,6 +108,10 @@ export default function SubmitPage({ params }) {
           <p>You've already submitted a photo for this event:</p>
           <img src={existing.polaroid_url} alt="Your current submission" style={{ width: 160 }} />
           <p>{existing.caption}</p>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+            <a href={existing.photo_url} download>Download raw photo</a>
+            <a href={existing.polaroid_url} download>Download polaroid</a>
+          </div>
           <button onClick={() => setExisting(null)}>Replace it</button>
           <button onClick={() => setChecked(false)}>Cancel</button>
         </div>

@@ -15,6 +15,7 @@ export async function POST(request, { params }) {
     .from('submissions')
     .select('id, photo_url, polaroid_url, caption, status, reuse_consent, created_at')
     .eq('event_id', params.id)
+    .eq('reuse_consent', true)
     .order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

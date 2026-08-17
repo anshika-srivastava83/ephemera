@@ -105,10 +105,15 @@ export default function OwnerDashboard() {
           {events.length === 0 && <p>No events yet.</p>}
           <ul style={{ listStyle: 'none', padding: 0 }}>
             {events.map((ev) => (
-              <li key={ev.id} style={{ marginBottom: 8 }}>
-                <button onClick={() => setEvent(ev)} style={{ width: '100%', textAlign: 'left' }}>
+              <li key={ev.id} style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
+                <button onClick={() => setEvent(ev)} style={{ flex: 1, textAlign: 'left' }}>
                   {ev.name} — {ev.status} — {new Date(ev.created_at).toLocaleDateString()}
                 </button>
+                {role === 'owner' && (
+                  <a href={`/owner/event/${ev.id}/gallery`} style={{ alignSelf: 'center' }}>
+                    Gallery
+                  </a>
+                )}
               </li>
             ))}
           </ul>

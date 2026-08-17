@@ -16,7 +16,7 @@ export async function GET(request) {
   const phone_hash = hashPhone(phone);
   const { data, error } = await supabaseAdmin()
     .from('submissions')
-    .select('id, caption, polaroid_url, status')
+    .select('id, caption, photo_url, polaroid_url, status')
     .eq('event_id', eventId)
     .eq('phone_hash', phone_hash)
     .maybeSingle();
