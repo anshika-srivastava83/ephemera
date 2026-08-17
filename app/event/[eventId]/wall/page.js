@@ -11,6 +11,8 @@ export default function WallPage({ params }) {
   const { eventId } = params;
   const [submissions, setSubmissions] = useState([]);
 
+  const [chosenLayoutId, setChosenLayoutId] = useState(null);
+
   async function loadApproved() {
     const { data } = await supabasePublic
       .from('submissions')
@@ -18,6 +20,13 @@ export default function WallPage({ params }) {
       .eq('event_id', eventId)
       .eq('status', 'approved');
     setSubmissions(data || []);
+
+    const { data: eventData } = await supabasePublic
+      .from('events')
+      .select('chosen_layout_id')
+      .eq('id', eventId)
+      .single();
+    setChosenLayoutId(eventData?.chosen_layout_id || null);
   }
 
   useEffect(() => {
@@ -40,7 +49,8 @@ export default function WallPage({ params }) {
     submissions.map((s) => s.id),
     eventId,
     WALL_WIDTH,
-    WALL_HEIGHT
+    WALL_HEIGHT,
+    chosenLayoutId
   );
 
   return (
