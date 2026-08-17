@@ -151,16 +151,6 @@ export default function ModeratePage({ params }) {
                     ✎ Edit
                   </button>
                   <img src={current.polaroid_url} alt={current.caption} draggable="false" />
-                  {current.reuse_consent && (
-                    <a
-                      href={current.polaroid_url}
-                      download
-                      title="Download (reuse authorized)"
-                      style={{ fontSize: 18, position: 'absolute', top: 6, right: 6 }}
-                    >
-                      ⬇
-                    </a>
-                  )}
                 </div>
               </TinderCard>
             )}
