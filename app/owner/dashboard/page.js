@@ -114,6 +114,9 @@ export default function OwnerDashboard() {
                     Gallery
                   </a>
                 )}
+                <a href={`/owner/event/${ev.id}/select-style`} style={{ alignSelf: 'center' }}>
+                  Wall style
+                </a>
               </li>
             ))}
           </ul>

@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../../../lib/supabaseClient';
-import { isOwner } from '../../../../../lib/auth';
+import { isOwnerOrCollaborator } from '../../../../../lib/auth';
 
 // POST /api/events/[id]/set-style  { ownerPassword, chosenLayoutId }
 export async function POST(request, { params }) {
   const { ownerPassword, chosenLayoutId } = await request.json();
-  if (!isOwner(ownerPassword)) {
+  if (!isOwnerOrCollaborator(ownerPassword)) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }
 
