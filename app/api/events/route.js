@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../lib/supabaseClient';
-import { isOwner } from '../../../lib/auth';
+import { isOwner, isOwnerOrCollaborator } from '../../../lib/auth';
 
 // POST /api/events  { name, ownerPassword }
 // Creates a brand-new event -> a brand-new event id -> a brand-new QR.
@@ -25,4 +25,28 @@ export async function POST(request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ event: data });
+}
+
+// GET /api/events?password=...
+// Lists all events (owner and collaborator both see everything).
+// Returns the caller's role so the UI can show/hide owner-only controls.
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const password = searchParams.get('password');
+
+  if (!isOwnerOrCollaborator(password)) {
+    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+  }
+
+  const { data, error } = await supabaseAdmin()
+    .from('events')
+    .select('id, name, status, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  return NextResponse.json({
+    events: data,
+    role: isOwner(password) ? 'owner' : 'collaborator',
+  });
 }

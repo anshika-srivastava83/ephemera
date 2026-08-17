@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import TinderCard from 'react-tinder-card';
+import { supabasePublic } from '../../../../lib/supabaseClient';
+import { compositePolaroid } from '../../../../lib/compositePolaroid';
 
 export default function ModeratePage({ params }) {
   const { eventId } = params;
@@ -12,6 +14,8 @@ export default function ModeratePage({ params }) {
   const [lastSubmissionId, setLastSubmissionId] = useState(null);
   const [canUndo, setCanUndo] = useState(false);
   const [status, setStatus] = useState('');
+  const [editingCaption, setEditingCaption] = useState('');
+  const [editStatus, setEditStatus] = useState('');
 
   async function loadPending() {
     setStatus('Loading...');
@@ -57,7 +61,49 @@ export default function ModeratePage({ params }) {
     loadPending();
   }
 
+  async function saveCaption(submission) {
+    setEditStatus('Saving...');
+    try {
+      const polaroidBlob = await compositePolaroid(submission.photo_url, editingCaption);
+      const path = `${eventId}/${Date.now()}-polaroid-edit.jpg`;
+      const { error: uploadError } = await supabasePublic.storage
+        .from('photos')
+        .upload(path, polaroidBlob);
+      if (uploadError) {
+        setEditStatus(`Upload failed: ${uploadError.message}`);
+        return;
+      }
+      const { data: urlData } = supabasePublic.storage.from('photos').getPublicUrl(path);
+
+      const res = await fetch(`/api/submissions/${submission.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          caption: editingCaption,
+          polaroidUrl: urlData.publicUrl,
+          ownerPassword: password,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditStatus(`Error: ${data.error}`);
+        return;
+      }
+
+      setPending((prev) =>
+        prev.map((s) => (s.id === submission.id ? { ...s, ...data.submission } : s))
+      );
+      setEditStatus('Saved.');
+    } catch (err) {
+      setEditStatus(`Error: ${err.message}`);
+    }
+  }
+
   const current = pending[0];
+
+  useEffect(() => {
+    if (current) setEditingCaption(current.caption);
+  }, [current?.id]);
 
   return (
     <main style={{ maxWidth: 400, margin: '40px auto', padding: 16, textAlign: 'center' }}>
@@ -94,19 +140,28 @@ export default function ModeratePage({ params }) {
               >
                 <div className="polaroid" style={{ position: 'relative', margin: '0 auto', width: 260 }}>
                   <img src={current.polaroid_url} alt={current.caption} draggable="false" />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div className="caption">{current.caption}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                    <input
+                      value={editingCaption}
+                      onChange={(e) => setEditingCaption(e.target.value)}
+                      maxLength={120}
+                      style={{ flex: 1 }}
+                    />
+                    <button onClick={() => saveCaption(current)} style={{ fontSize: 12 }}>
+                      Save
+                    </button>
                     {current.reuse_consent && (
                       <a
                         href={current.polaroid_url}
                         download
                         title="Download (reuse authorized)"
-                        style={{ fontSize: 18, marginLeft: 8 }}
+                        style={{ fontSize: 18 }}
                       >
                         ⬇
                       </a>
                     )}
                   </div>
+                  {editStatus && <p style={{ fontSize: 11, opacity: 0.7 }}>{editStatus}</p>}
                 </div>
               </TinderCard>
             )}

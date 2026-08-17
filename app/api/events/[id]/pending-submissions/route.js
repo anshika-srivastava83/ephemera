@@ -10,7 +10,7 @@ export async function POST(request, { params }) {
 
   const { data, error } = await supabaseAdmin()
     .from('submissions')
-    .select('id, polaroid_url, caption, reuse_consent')
+    .select('id, photo_url, polaroid_url, caption, reuse_consent')
     .eq('event_id', params.id)
     .eq('status', 'pending');
 

@@ -5,9 +5,24 @@ import QRCode from 'qrcode.react';
 
 export default function OwnerDashboard() {
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState(null);
+  const [events, setEvents] = useState([]);
   const [name, setName] = useState('');
   const [event, setEvent] = useState(null);
   const [status, setStatus] = useState('');
+
+  async function loadEvents() {
+    setStatus('Loading events...');
+    const res = await fetch(`/api/events?password=${encodeURIComponent(password)}`);
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(`Error: ${data.error}`);
+      return;
+    }
+    setEvents(data.events || []);
+    setRole(data.role);
+    setStatus('');
+  }
 
   async function createEvent() {
     setStatus('Creating event...');
@@ -22,6 +37,8 @@ export default function OwnerDashboard() {
       return;
     }
     setEvent(data.event);
+    setName('');
+    loadEvents();
     setStatus('');
   }
 
@@ -64,6 +81,7 @@ export default function OwnerDashboard() {
       return;
     }
     setEvent(null);
+    loadEvents();
     setStatus('Wall deleted.');
   }
 
@@ -75,39 +93,63 @@ export default function OwnerDashboard() {
     <main style={{ maxWidth: 480, margin: '40px auto', padding: 16 }}>
       <h1>Ephemera — owner dashboard</h1>
 
-      <label>Owner password</label>
+      <label>Password</label>
       <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <button onClick={loadEvents} disabled={!password}>
+        Log in
+      </button>
 
-      {!event && (
-        <div>
-          <label>Event name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mehfil Sep 19" />
-          <button onClick={createEvent} disabled={!password || !name}>
-            Create new event (new QR)
-          </button>
+      {role && !event && (
+        <div style={{ marginTop: 24 }}>
+          <h2>Your events</h2>
+          {events.length === 0 && <p>No events yet.</p>}
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {events.map((ev) => (
+              <li key={ev.id} style={{ marginBottom: 8 }}>
+                <button onClick={() => setEvent(ev)} style={{ width: '100%', textAlign: 'left' }}>
+                  {ev.name} — {ev.status} — {new Date(ev.created_at).toLocaleDateString()}
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {role === 'owner' && (
+            <div style={{ marginTop: 16 }}>
+              <label>New event name</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mehfil Sep 19" />
+              <button onClick={createEvent} disabled={!name}>
+                Create new event (new QR)
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {event && (
-        <div>
+        <div style={{ marginTop: 24 }}>
+          <button onClick={() => setEvent(null)} style={{ marginBottom: 12 }}>
+            ← Back to events
+          </button>
           <p>Event: {event.name}</p>
           <QRCode value={submitUrl} size={220} />
           <p>{submitUrl}</p>
-          <button onClick={closeQr}>Close QR (stop submissions)</button>
+
+          {role === 'owner' && <button onClick={closeQr}>Close QR (stop submissions)</button>}
+
           <p>
             Next: go to <a href={`/owner/event/${event.id}/moderate`}>the moderation screen</a> to
             swipe through submissions.
           </p>
 
-          <div style={{ marginTop: 24, borderTop: '1px solid #444', paddingTop: 16 }}>
-            <p style={{ fontSize: 13, opacity: 0.8 }}>Danger zone</p>
-            <button onClick={disposePhotos} style={{ marginRight: 12 }}>
-              Dispose photos
-            </button>
-            <button onClick={deleteWall}>
-              Delete wall
-            </button>
-          </div>
+          {role === 'owner' && (
+            <div style={{ marginTop: 24, borderTop: '1px solid #444', paddingTop: 16 }}>
+              <p style={{ fontSize: 13, opacity: 0.8 }}>Danger zone</p>
+              <button onClick={disposePhotos} style={{ marginRight: 12 }}>
+                Dispose photos
+              </button>
+              <button onClick={deleteWall}>Delete wall</button>
+            </div>
+          )}
         </div>
       )}
 
