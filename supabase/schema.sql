@@ -6,6 +6,7 @@ create table events (
   owner_id uuid not null,
   status text not null default 'open',
   chosen_layout_id text,
+  alter table events add column if not exists chosen_layout_ids text[] not null default '{}';
   final_wall_image_url text,
   created_at timestamptz not null default now()
 );
