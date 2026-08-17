@@ -47,17 +47,19 @@ export default function SelectStylePage({ params }) {
   }
 
   async function selectStyle(styleId) {
+    // Clicking an already-selected style deselects it (back to no style chosen).
+    const newValue = chosenId === styleId ? null : styleId;
     const res = await fetch(`/api/events/${eventId}/set-style`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ownerPassword: password, chosenLayoutId: styleId }),
+      body: JSON.stringify({ ownerPassword: password, chosenLayoutId: newValue }),
     });
     const data = await res.json();
     if (!res.ok) {
       setStatus(`Error: ${data.error}`);
       return;
     }
-    setChosenId(styleId);
+    setChosenId(newValue);
   }
 
   async function downloadStyle(styleId, node) {
