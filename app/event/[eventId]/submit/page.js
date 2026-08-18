@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabasePublic } from '../../../../lib/supabaseClient';
 import { compositePolaroid } from '../../../../lib/compositePolaroid';
 
@@ -16,8 +16,8 @@ export default function SubmitPage({ params }) {
   const [checked, setChecked] = useState(false);
   const [status, setStatus] = useState('');
   const [wrapped, setWrapped] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState(null); // object URL of the composited preview
-  const [previewBlob, setPreviewBlob] = useState(null); // the actual blob to upload on confirm
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewBlob, setPreviewBlob] = useState(null);
 
   async function checkPhone() {
     setStatus('Checking...');
@@ -30,28 +30,32 @@ export default function SubmitPage({ params }) {
     setStatus('');
   }
 
-    // Step 1: build the polaroid locally (no upload yet) and show it for confirmation.
-  async function handlePreview(e) {
-    e.preventDefault();
+  // Live preview: regenerates automatically whenever the photo or caption changes.
+  useEffect(() => {
     if (!file) {
+      setPreviewUrl(null);
+      setPreviewBlob(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const blob = await compositePolaroid(file, caption);
+      if (cancelled) return;
+      setPreviewBlob(blob);
+      setPreviewUrl(URL.createObjectURL(blob));
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, caption]);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!file || !previewBlob) {
       setStatus('Please add a photo.');
       return;
     }
-    setStatus('Building preview...');
-    const polaroidBlob = await compositePolaroid(file, caption);
-    setPreviewBlob(polaroidBlob);
-    setPreviewUrl(URL.createObjectURL(polaroidBlob));
-    setStatus('');
-  }
-
-  function backToEdit() {
-    if (previewUrl) URL.revokeObjectURL(previewUrl);
-    setPreviewUrl(null);
-    setPreviewBlob(null);
-  }
-
-  // Step 2: only now do we actually upload and save.
-  async function confirmSubmit() {
     setStatus('Uploading photo...');
 
     const path = `${eventId}/${Date.now()}-${file.name}`;
@@ -113,7 +117,6 @@ export default function SubmitPage({ params }) {
       {!checked && (
         <div>
           <label>Phone number</label>
-          <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Your number" />
           <input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
@@ -140,8 +143,8 @@ export default function SubmitPage({ params }) {
         </div>
       )}
 
-            {checked && !existing && !previewUrl && (
-        <form onSubmit={handlePreview}>
+      {checked && !existing && (
+        <form onSubmit={handleSubmit}>
           <label>Photo</label>
           <input
             type="file"
@@ -157,6 +160,20 @@ export default function SubmitPage({ params }) {
             onChange={(e) => setCaption(e.target.value)}
           />
 
+          {previewUrl && (
+            <div style={{ margin: '16px 0' }}>
+              <p>Your polaroid:</p>
+              <div style={{ display: 'inline-block' }}>
+                <img src={previewUrl} alt="Your polaroid preview" style={{ width: 220, display: 'block' }} />
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <a href={previewUrl} download="my-polaroid.jpg" style={{ fontSize: 13 }}>
+                  Download this preview
+                </a>
+              </div>
+            </div>
+          )}
+
           <label>
             <input
               type="checkbox"
@@ -166,19 +183,10 @@ export default function SubmitPage({ params }) {
             The organiser may download and reuse my photo
           </label>
 
-          <button type="submit">Preview my polaroid</button>
+          <button type="submit" disabled={!previewBlob}>
+            Add to the wall
+          </button>
         </form>
-      )}
-
-      {checked && !existing && previewUrl && (
-        <div>
-          <p>Here's your polaroid:</p>
-          <img src={previewUrl} alt="Your polaroid preview" style={{ width: 220 }} className="polaroid" />
-          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
-            <button onClick={backToEdit}>Go back and redo</button>
-            <button onClick={confirmSubmit}>Looks good — add to the wall</button>
-          </div>
-        </div>
       )}
 
       {status && <p>{status}</p>}
