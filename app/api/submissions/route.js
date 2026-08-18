@@ -31,7 +31,7 @@ export async function GET(request) {
 export async function POST(request) {
   const { eventId, phone, caption, photoUrl, polaroidUrl, reuseConsent } = await request.json();
 
-    if (!eventId || !phone || !photoUrl || !polaroidUrl) {
+  if (!eventId || !phone || !photoUrl || !polaroidUrl) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
   if (caption.length > 120) {
@@ -42,7 +42,7 @@ export async function POST(request) {
 
   const { data: event, error: eventError } = await db
     .from('events')
-    .select('status')
+    .select('status, max_submissions')
     .eq('id', eventId)
     .single();
   if (eventError) return NextResponse.json({ error: eventError.message }, { status: 500 });
@@ -51,6 +51,30 @@ export async function POST(request) {
   }
 
   const phone_hash = hashPhone(phone);
+
+  // Only block brand-new submissions once the cap is hit -- someone
+  // replacing their own existing photo should never be blocked by this.
+  const { data: existingSubmission } = await db
+    .from('submissions')
+    .select('id')
+    .eq('event_id', eventId)
+    .eq('phone_hash', phone_hash)
+    .maybeSingle();
+
+  if (!existingSubmission) {
+    const { count, error: countError } = await db
+      .from('submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('event_id', eventId);
+    if (countError) return NextResponse.json({ error: countError.message }, { status: 500 });
+
+    if (count >= (event.max_submissions || 500)) {
+      return NextResponse.json(
+        { error: 'This event has reached its submission limit' },
+        { status: 403 }
+      );
+    }
+  }
 
   const { data, error } = await db
     .from('submissions')

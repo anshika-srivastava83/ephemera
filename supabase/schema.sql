@@ -5,6 +5,7 @@ create table events (
   name text not null,
   owner_id uuid not null,
   status text not null default 'open',
+  alter table events add column if not exists max_submissions integer not null default 500;
   chosen_layout_id text,
   alter table events add column if not exists chosen_layout_ids text[] not null default '{}';
   final_wall_image_url text,

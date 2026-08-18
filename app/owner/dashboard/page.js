@@ -8,6 +8,7 @@ export default function OwnerDashboard() {
   const [role, setRole] = useState(null);
   const [events, setEvents] = useState([]);
   const [name, setName] = useState('');
+  const [maxSubmissions, setMaxSubmissions] = useState('');
   const [event, setEvent] = useState(null);
   const [status, setStatus] = useState('');
 
@@ -29,7 +30,11 @@ export default function OwnerDashboard() {
     const res = await fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, ownerPassword: password }),
+      body: JSON.stringify({
+        name,
+        ownerPassword: password,
+        maxSubmissions: maxSubmissions ? Number(maxSubmissions) : undefined,
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -136,6 +141,13 @@ export default function OwnerDashboard() {
             <div style={{ marginTop: 16 }}>
               <label>New event name</label>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mehfil Sep 19" />
+              <label>Submission cap (optional, defaults to 500)</label>
+              <input
+                type="number"
+                value={maxSubmissions}
+                onChange={(e) => setMaxSubmissions(e.target.value)}
+                placeholder="500"
+              />
               <button onClick={createEvent} disabled={!name}>
                 Create new event (new QR)
               </button>
