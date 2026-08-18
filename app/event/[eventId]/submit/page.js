@@ -97,6 +97,12 @@ export default function SubmitPage({ params }) {
         <div>
           <label>Phone number</label>
           <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Your number" />
+          <input
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="Your number"
+            onKeyDown={(e) => e.key === 'Enter' && phone && checkPhone()}
+          />
           <button onClick={checkPhone} disabled={!phone}>
             Continue
           </button>

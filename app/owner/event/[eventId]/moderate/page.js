@@ -120,6 +120,7 @@ export default function ModeratePage({ params }) {
             placeholder="Owner or collaborator password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && password && loadAll()}
           />
           <button onClick={loadAll} disabled={!password}>
             Load submissions

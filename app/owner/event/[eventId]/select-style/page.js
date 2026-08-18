@@ -141,6 +141,7 @@ export default function SelectStylePage({ params }) {
             placeholder="Owner password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && password && loadAll()}
           />
           <button onClick={loadAll} disabled={!password}>
             Load previews

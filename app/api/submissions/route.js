@@ -31,7 +31,7 @@ export async function GET(request) {
 export async function POST(request) {
   const { eventId, phone, caption, photoUrl, polaroidUrl, reuseConsent } = await request.json();
 
-  if (!eventId || !phone || !caption || !photoUrl || !polaroidUrl) {
+    if (!eventId || !phone || !photoUrl || !polaroidUrl) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
   if (caption.length > 120) {

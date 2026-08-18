@@ -101,6 +101,7 @@ export default function FinalizePage({ params }) {
             placeholder="Owner password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && password && load()}
           />
           <button onClick={load} disabled={!password}>
             Load
