@@ -30,7 +30,6 @@ export default function SubmitPage({ params }) {
     setStatus('');
   }
 
-  // Live preview: regenerates automatically whenever the photo or caption changes.
   useEffect(() => {
     if (!file) {
       setPreviewUrl(null);
@@ -103,93 +102,121 @@ export default function SubmitPage({ params }) {
 
   if (wrapped) {
     return (
-      <main style={{ maxWidth: 420, margin: '80px auto', padding: 16, textAlign: 'center' }}>
-        <h1>This event has wrapped</h1>
-        <p>Submissions are closed. Thanks for being part of it!</p>
+      <main className="guest-page">
+        <div className="guest-card" style={{ textAlign: 'center' }}>
+          <h1 style={{ marginTop: 0 }}>This event has wrapped</h1>
+          <p>Submissions are closed. Thanks for being part of it!</p>
+        </div>
       </main>
     );
   }
 
   return (
-    <main style={{ maxWidth: 420, margin: '40px auto', padding: 16 }}>
-      <h1>Add your photo to the wall</h1>
+    <main className="guest-page">
+      <div className="guest-card">
+        <h1 style={{ marginTop: 0, fontSize: 24 }}>Add your photo to the wall</h1>
 
-      {!checked && (
-        <div>
-          <label>Phone number</label>
-          <input
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Your number"
-            onKeyDown={(e) => e.key === 'Enter' && phone && checkPhone()}
-          />
-          <button onClick={checkPhone} disabled={!phone}>
-            Continue
-          </button>
-        </div>
-      )}
-
-      {checked && existing && (
-        <div>
-          <p>You've already submitted a photo for this event:</p>
-          <img src={existing.polaroid_url} alt="Your current submission" style={{ width: 160 }} />
-          <p>{existing.caption}</p>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
-            <a href={existing.photo_url} download>Download raw photo</a>
-            <a href={existing.polaroid_url} download>Download polaroid</a>
+        {!checked && (
+          <div>
+            <label>Phone number</label>
+            <input
+              className="guest-input"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Your number"
+              inputMode="numeric"
+              onKeyDown={(e) => e.key === 'Enter' && phone && checkPhone()}
+            />
+            <button className="guest-button" onClick={checkPhone} disabled={!phone}>
+              Continue
+            </button>
           </div>
-          <button onClick={() => setExisting(null)}>Replace it</button>
-          <button onClick={() => setChecked(false)}>Cancel</button>
-        </div>
-      )}
+        )}
 
-      {checked && !existing && (
-        <form onSubmit={handleSubmit}>
-          <label>Photo</label>
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
+        {checked && existing && (
+          <div>
+            <p>You've already submitted a photo for this event:</p>
+            <img
+              src={existing.polaroid_url}
+              alt="Your current submission"
+              style={{ width: '100%', maxWidth: 220, borderRadius: 8, display: 'block', margin: '0 auto 12px' }}
+            />
+            <p style={{ textAlign: 'center' }}>{existing.caption}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 16, fontSize: 14 }}>
+              <a href={existing.photo_url} download style={{ color: 'var(--guest-accent-dark)' }}>
+                Download raw
+              </a>
+              <a href={existing.polaroid_url} download style={{ color: 'var(--guest-accent-dark)' }}>
+                Download polaroid
+              </a>
+            </div>
+            <button className="guest-button-secondary" onClick={() => setExisting(null)}>
+              Replace it
+            </button>
+            <button className="guest-button" onClick={() => setChecked(false)}>
+              Cancel
+            </button>
+          </div>
+        )}
 
-          <label>Comment ({caption.length}/{CAPTION_LIMIT})</label>
-          <textarea
-            value={caption}
-            maxLength={CAPTION_LIMIT}
-            onChange={(e) => setCaption(e.target.value)}
-          />
+        {checked && !existing && (
+          <form onSubmit={handleSubmit}>
+            <label>Photo</label>
+            <input
+              className="guest-input"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => setFile(e.target.files[0])}
+            />
 
-          {previewUrl && (
-            <div style={{ margin: '16px 0' }}>
-              <p>Your polaroid:</p>
-              <div style={{ display: 'inline-block' }}>
-                <img src={previewUrl} alt="Your polaroid preview" style={{ width: 220, display: 'block' }} />
-              </div>
-              <div style={{ marginTop: 8 }}>
-                <a href={previewUrl} download="my-polaroid.jpg" style={{ fontSize: 13 }}>
+            <label>
+              Comment ({caption.length}/{CAPTION_LIMIT})
+            </label>
+            <textarea
+              className="guest-textarea"
+              value={caption}
+              maxLength={CAPTION_LIMIT}
+              onChange={(e) => setCaption(e.target.value)}
+              rows={3}
+            />
+
+            {previewUrl && (
+              <div style={{ margin: '8px 0 20px', textAlign: 'center' }}>
+                <p style={{ marginBottom: 8, fontSize: 14 }}>Your polaroid:</p>
+                <img
+                  src={previewUrl}
+                  alt="Your polaroid preview"
+                  style={{ width: '100%', maxWidth: 220, display: 'block', margin: '0 auto' }}
+                />
+                <a
+                  href={previewUrl}
+                  download="my-polaroid.jpg"
+                  style={{ fontSize: 13, color: 'var(--guest-accent-dark)', display: 'inline-block', marginTop: 8 }}
+                >
                   Download this preview
                 </a>
               </div>
-            </div>
-          )}
+            )}
 
-          <label>
-            <input
-              type="checkbox"
-              checked={reuseConsent}
-              onChange={(e) => setReuseConsent(e.target.checked)}
-            />
-            The organiser may download and reuse my photo
-          </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, marginBottom: 20 }}>
+              <input
+                type="checkbox"
+                checked={reuseConsent}
+                onChange={(e) => setReuseConsent(e.target.checked)}
+                style={{ width: 18, height: 18 }}
+              />
+              The organiser may download and reuse my photo
+            </label>
 
-          <button type="submit" disabled={!previewBlob}>
-            Add to the wall
-          </button>
-        </form>
-      )}
+            <button className="guest-button" type="submit" disabled={!previewBlob}>
+              Add to the wall
+            </button>
+          </form>
+        )}
 
-      {status && <p>{status}</p>}
+        {status && <p style={{ textAlign: 'center' }}>{status}</p>}
+      </div>
     </main>
   );
 }

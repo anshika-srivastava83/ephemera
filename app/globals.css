@@ -2,6 +2,23 @@
   box-sizing: border-box;
 }
 
+:root {
+  /* Guest-facing (wooden/vintage) palette */
+  --guest-bg: #2b1d14;
+  --guest-card-bg: #f5ecd9;
+  --guest-accent: #c8873a;
+  --guest-accent-dark: #a06b2a;
+  --guest-text: #3a2415;
+  --guest-text-light: #f5ecd9;
+
+  /* Owner/collaborator (lavender) palette */
+  --owner-bg: #f3effa;
+  --owner-card-bg: #ffffff;
+  --owner-accent: #8a6fc2;
+  --owner-accent-dark: #6f52ab;
+  --owner-text: #2e2440;
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
@@ -28,4 +45,67 @@ body {
   text-align: center;
   margin-top: 6px;
   font-family: 'Comic Sans MS', cursive;
+}
+
+/* Guest page shell */
+.guest-page {
+  min-height: 100vh;
+  background: var(--guest-bg);
+  color: var(--guest-text-light);
+  padding: 24px 16px 48px;
+}
+
+.guest-card {
+  max-width: 420px;
+  margin: 0 auto;
+  background: var(--guest-card-bg);
+  color: var(--guest-text);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.guest-input,
+.guest-textarea {
+  width: 100%;
+  font-size: 16px; /* 16px prevents iOS auto-zoom on focus */
+  padding: 14px;
+  margin: 8px 0 16px;
+  border-radius: 10px;
+  border: 1px solid #d8c7a3;
+  background: #fff;
+  color: var(--guest-text);
+}
+
+.guest-button {
+  width: 100%;
+  min-height: 50px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  background: var(--guest-accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.guest-button:active {
+  background: var(--guest-accent-dark);
+}
+
+.guest-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.guest-button-secondary {
+  width: 100%;
+  min-height: 46px;
+  font-size: 15px;
+  border: 2px solid var(--guest-accent);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--guest-accent-dark);
+  cursor: pointer;
+  margin-bottom: 12px;
 }
