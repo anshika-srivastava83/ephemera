@@ -16,6 +16,8 @@ export default function SubmitPage({ params }) {
   const [checked, setChecked] = useState(false);
   const [status, setStatus] = useState('');
   const [wrapped, setWrapped] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState(null); // object URL of the composited preview
+  const [previewBlob, setPreviewBlob] = useState(null); // the actual blob to upload on confirm
 
   async function checkPhone() {
     setStatus('Checking...');
@@ -28,12 +30,28 @@ export default function SubmitPage({ params }) {
     setStatus('');
   }
 
-  async function handleSubmit(e) {
+    // Step 1: build the polaroid locally (no upload yet) and show it for confirmation.
+  async function handlePreview(e) {
     e.preventDefault();
     if (!file) {
       setStatus('Please add a photo.');
       return;
     }
+    setStatus('Building preview...');
+    const polaroidBlob = await compositePolaroid(file, caption);
+    setPreviewBlob(polaroidBlob);
+    setPreviewUrl(URL.createObjectURL(polaroidBlob));
+    setStatus('');
+  }
+
+  function backToEdit() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setPreviewBlob(null);
+  }
+
+  // Step 2: only now do we actually upload and save.
+  async function confirmSubmit() {
     setStatus('Uploading photo...');
 
     const path = `${eventId}/${Date.now()}-${file.name}`;
@@ -47,12 +65,11 @@ export default function SubmitPage({ params }) {
     const { data: publicUrlData } = supabasePublic.storage.from('photos').getPublicUrl(path);
     const photoUrl = publicUrlData.publicUrl;
 
-    setStatus('Building polaroid...');
-    const polaroidBlob = await compositePolaroid(file, caption);
+    setStatus('Uploading polaroid...');
     const polaroidPath = `${eventId}/${Date.now()}-polaroid.jpg`;
     const { error: polaroidUploadError } = await supabasePublic.storage
       .from('photos')
-      .upload(polaroidPath, polaroidBlob);
+      .upload(polaroidPath, previewBlob);
     if (polaroidUploadError) {
       setStatus(`Polaroid upload failed: ${polaroidUploadError.message}`);
       return;
@@ -123,8 +140,8 @@ export default function SubmitPage({ params }) {
         </div>
       )}
 
-      {checked && !existing && (
-        <form onSubmit={handleSubmit}>
+            {checked && !existing && !previewUrl && (
+        <form onSubmit={handlePreview}>
           <label>Photo</label>
           <input
             type="file"
@@ -149,8 +166,19 @@ export default function SubmitPage({ params }) {
             The organiser may download and reuse my photo
           </label>
 
-          <button type="submit">Add to the wall</button>
+          <button type="submit">Preview my polaroid</button>
         </form>
+      )}
+
+      {checked && !existing && previewUrl && (
+        <div>
+          <p>Here's your polaroid:</p>
+          <img src={previewUrl} alt="Your polaroid preview" style={{ width: 220 }} className="polaroid" />
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+            <button onClick={backToEdit}>Go back and redo</button>
+            <button onClick={confirmSubmit}>Looks good — add to the wall</button>
+          </div>
+        </div>
       )}
 
       {status && <p>{status}</p>}
