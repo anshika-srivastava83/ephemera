@@ -113,6 +113,12 @@ export default function OwnerDashboard() {
               <li key={ev.id} style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
                 <button onClick={() => setEvent(ev)} style={{ flex: 1, textAlign: 'left' }}>
                   {ev.name} — {ev.status} — {new Date(ev.created_at).toLocaleDateString()}
+                  {' — '}
+                  <span style={{ color: ev.pendingCount > 0 ? '#ffb300' : 'inherit' }}>
+                    {ev.pendingCount} pending
+                  </span>
+                  {', '}
+                  {ev.approvedCount} approved
                 </button>
                 {role === 'owner' && (
                   <a href={`/owner/event/${ev.id}/gallery`} style={{ alignSelf: 'center' }}>

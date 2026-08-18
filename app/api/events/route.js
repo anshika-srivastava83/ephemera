@@ -28,8 +28,9 @@ export async function POST(request) {
 }
 
 // GET /api/events?password=...
-// Lists all events (owner and collaborator both see everything).
-// Returns the caller's role so the UI can show/hide owner-only controls.
+// Lists all events (owner and collaborator both see everything), each with
+// its pending/approved submission counts. Returns the caller's role so the
+// UI can show/hide owner-only controls.
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const password = searchParams.get('password');
@@ -45,8 +46,31 @@ export async function GET(request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // Pull pending/approved counts for all these events in one query, then
+  // tally them in JS -- simpler than a grouped SQL query for this scale.
+  const eventIds = data.map((ev) => ev.id);
+  const { data: submissionCounts, error: countError } = await supabaseAdmin()
+    .from('submissions')
+    .select('event_id, status')
+    .in('event_id', eventIds);
+
+  if (countError) return NextResponse.json({ error: countError.message }, { status: 500 });
+
+  const countsByEvent = {};
+  for (const row of submissionCounts) {
+    if (!countsByEvent[row.event_id]) countsByEvent[row.event_id] = { pending: 0, approved: 0 };
+    if (row.status === 'pending') countsByEvent[row.event_id].pending++;
+    if (row.status === 'approved') countsByEvent[row.event_id].approved++;
+  }
+
+  const eventsWithCounts = data.map((ev) => ({
+    ...ev,
+    pendingCount: countsByEvent[ev.id]?.pending || 0,
+    approvedCount: countsByEvent[ev.id]?.approved || 0,
+  }));
+
   return NextResponse.json({
-    events: data,
+    events: eventsWithCounts,
     role: isOwner(password) ? 'owner' : 'collaborator',
   });
 }
