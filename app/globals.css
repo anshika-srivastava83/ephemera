@@ -3,13 +3,13 @@
 }
 
 :root {
-  /* Guest-facing (wooden/vintage) palette */
-  --guest-bg: #2b1d14;
-  --guest-card-bg: #f5ecd9;
+  /* Guest-facing (wooden/vintage) palette -- lighter, warmer */
+  --guest-bg: #e6d3ae;
+  --guest-card-bg: #faf3e4;
   --guest-accent: #c8873a;
   --guest-accent-dark: #a06b2a;
-  --guest-text: #3a2415;
-  --guest-text-light: #f5ecd9;
+  --guest-text: #4a3520;
+  --guest-text-light: #4a3520;
 
   /* Owner/collaborator (lavender) palette */
   --owner-bg: #f3effa;
@@ -47,12 +47,14 @@ body {
   font-family: 'Comic Sans MS', cursive;
 }
 
-/* Guest page shell */
 .guest-page {
   min-height: 100vh;
   background: var(--guest-bg);
   color: var(--guest-text-light);
-  padding: 24px 16px 48px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .guest-card {
@@ -68,7 +70,7 @@ body {
 .guest-input,
 .guest-textarea {
   width: 100%;
-  font-size: 16px; /* 16px prevents iOS auto-zoom on focus */
+  font-size: 16px;
   padding: 14px;
   margin: 8px 0 16px;
   border-radius: 10px;
