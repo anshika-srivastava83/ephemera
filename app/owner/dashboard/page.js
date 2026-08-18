@@ -93,8 +93,13 @@ export default function OwnerDashboard() {
     <main style={{ maxWidth: 480, margin: '40px auto', padding: 16 }}>
       <h1>Ephemera — owner dashboard</h1>
 
-      <label>Password</label>
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <label>Password</label>
+      <input
+        type="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && password && loadEvents()}
+      />
       <button onClick={loadEvents} disabled={!password}>
         Log in
       </button>
