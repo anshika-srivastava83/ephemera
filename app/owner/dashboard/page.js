@@ -23,7 +23,7 @@ export default function OwnerDashboard() {
     loadPublicEvents();
   }, []);
 
-  async function loadEvents() {
+    async function loadEvents() {
     setStatus('Loading events...');
     const res = await fetch(`/api/events?password=${encodeURIComponent(password)}`);
     const data = await res.json();
@@ -34,6 +34,16 @@ export default function OwnerDashboard() {
     setEvents(data.events || []);
     setRole(data.role);
     setStatus('');
+  }
+
+  async function logout() {
+    setPassword('');
+    setRole(null);
+    setEvent(null);
+    setStatus('');
+    const res = await fetch('/api/events');
+    const data = await res.json();
+    if (res.ok) setEvents(data.events || []);
   }
 
   async function createEvent() {
@@ -114,7 +124,7 @@ export default function OwnerDashboard() {
       <div className="owner-card">
         <h1 className="owner-heading">Ephemera — owner dashboard</h1>
 
-        {!event && (
+                {!event && !role && (
           <div className="owner-login-row">
             <input
               type="password"
@@ -126,6 +136,15 @@ export default function OwnerDashboard() {
             />
             <button className="owner-button" onClick={loadEvents} disabled={!password}>
               Log in
+            </button>
+          </div>
+        )}
+
+        {!event && role && (
+          <div className="owner-login-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="owner-empty-text">Logged in as {role}</span>
+            <button className="owner-button-secondary" onClick={logout}>
+              Log out
             </button>
           </div>
         )}
