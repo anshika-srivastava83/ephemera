@@ -7,14 +7,29 @@ import { computeWallPositions } from '../lib/wallLayout';
 const MINI_WALL_WIDTH = 340;
 const MINI_WALL_HEIGHT = 260;
 
+function generateEmptyFrames(count = 6) {
+  const frames = [];
+  for (let i = 0; i < count; i++) {
+    frames.push({
+      top: Math.random() * (MINI_WALL_HEIGHT - 90),
+      left: Math.random() * (MINI_WALL_WIDTH - 70),
+      rotate: Math.random() * 20 - 10,
+    });
+  }
+  return frames;
+}
+
 export default function Home() {
   const [liveEvent, setLiveEvent] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
   const [showClosePrompt, setShowClosePrompt] = useState(false);
   const [closePassword, setClosePassword] = useState('');
   const [closeStatus, setCloseStatus] = useState('');
+  const [closedEvent, setClosedEvent] = useState(null);
+  const [closedEventPassword, setClosedEventPassword] = useState('');
+  const [undoStatus, setUndoStatus] = useState('');
 
   async function closeLiveEvent() {
     setCloseStatus('Closing...');
@@ -28,10 +43,36 @@ export default function Home() {
       setCloseStatus(`Error: ${data.error || 'could not close event'}`);
       return;
     }
-    setCloseStatus('Event closed.');
+    setClosedEvent(liveEvent);
+    setClosedEventPassword(closePassword);
     setShowClosePrompt(false);
     setClosePassword('');
+    setCloseStatus('');
     setLiveEvent(null);
+  }
+
+  async function undoClose() {
+    setUndoStatus('Reopening...');
+    const res = await fetch(`/api/events/${closedEvent.id}/reopen`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ownerPassword: closedEventPassword }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      setUndoStatus(`Error: ${data.error || 'could not reopen event'}`);
+      return;
+    }
+    setLiveEvent(closedEvent);
+    setClosedEvent(null);
+    setClosedEventPassword('');
+    setUndoStatus('');
+  }
+
+  function dismissClosed() {
+    setClosedEvent(null);
+    setClosedEventPassword('');
+    setUndoStatus('');
   }
 
   useEffect(() => {
@@ -63,13 +104,7 @@ export default function Home() {
     ? computeWallPositions(submissions.map((s) => s.id), liveEvent.id, MINI_WALL_WIDTH, MINI_WALL_HEIGHT)
     : {};
 
-  const emptyFrames = [
-    { top: 10, left: 30, rotate: -8 },
-    { top: 60, left: 190, rotate: 6 },
-    { top: 130, left: 60, rotate: 4 },
-    { top: 20, left: 250, rotate: -5 },
-    { top: 150, left: 220, rotate: 9 },
-  ];
+    const [emptyFrames] = useState(() => generateEmptyFrames());
 
   return (
     <main className="landing">
@@ -143,7 +178,7 @@ export default function Home() {
             : 'A live polaroid wall, built by everyone at the event.'}
         </p>
 
-        {!loading && liveEvent && (
+                {!loading && liveEvent && (
           <div className="landing-close-section">
             {!showClosePrompt ? (
               <button
@@ -178,6 +213,19 @@ export default function Home() {
               </div>
             )}
             {closeStatus && <p className="landing-close-status">{closeStatus}</p>}
+          </div>
+        )}
+
+        {closedEvent && !liveEvent && (
+          <div className="landing-close-section">
+            <p className="landing-close-status">"{closedEvent.name}" is now closed.</p>
+            <div className="landing-close-form">
+              <button onClick={undoClose}>Undo</button>
+              <button className="landing-close-cancel" onClick={dismissClosed}>
+                Done
+              </button>
+            </div>
+            {undoStatus && <p className="landing-close-status">{undoStatus}</p>}
           </div>
         )}
       </section>
