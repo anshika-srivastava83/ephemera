@@ -52,13 +52,15 @@ export default function Home() {
 
   return (
     <main className="landing">
-      <button
-        className="landing-menu-toggle"
-        onClick={() => setMenuOpen(true)}
-        aria-label="Open menu"
-      >
-        ☰
-      </button>
+      {!menuOpen && (
+        <button
+          className="landing-menu-toggle"
+          onClick={() => setMenuOpen(true)}
+          aria-label="Open menu"
+        >
+          ☰
+        </button>
+      )}
 
       {menuOpen && <div className="landing-backdrop" onClick={() => setMenuOpen(false)} />}
 
@@ -70,7 +72,7 @@ export default function Home() {
           </button>
         </div>
         <nav>
-          <a href="/events" className="landing-nav-link">
+          <a href="/owner/dashboard" className="landing-nav-link">
             Events
           </a>
         </nav>
