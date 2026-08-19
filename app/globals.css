@@ -114,24 +114,70 @@ body {
 
 .landing {
   min-height: 100vh;
-  display: flex;
+  width: 100%;
+  overflow-x: hidden;
   background: linear-gradient(160deg, #f3effa 0%, #e9e0f7 100%);
+  position: relative;
+}
+
+.landing-menu-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(111, 82, 171, 0.2);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.landing-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 15;
 }
 
 .landing-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
   width: 240px;
-  flex-shrink: 0;
-  margin: 24px 0 24px 24px;
-  padding: 28px 22px;
+  padding: 24px 22px;
   background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 12px 32px rgba(111, 82, 171, 0.12);
-  height: fit-content;
+  box-shadow: 0 12px 32px rgba(111, 82, 171, 0.2);
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+  z-index: 18;
+}
+
+.landing-sidebar-open {
+  transform: translateX(0);
+}
+
+.landing-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.landing-menu-close {
+  border: none;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #6f52ab;
 }
 
 .landing-logo {
   color: var(--owner-text, #2e2440);
-  margin: 0 0 28px;
+  margin: 0;
   font-size: 22px;
   font-family: Georgia, 'Times New Roman', serif;
   letter-spacing: 0.5px;
@@ -154,19 +200,21 @@ body {
 }
 
 .landing-content {
-  flex: 1;
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 24px;
+  padding: 80px 24px 40px;
   text-align: center;
-  position: relative;
+  box-sizing: border-box;
 }
 
 .landing-wall {
   position: relative;
-  width: 340px;
+  width: 100%;
+  max-width: 340px;
   height: 260px;
   margin-bottom: 40px;
 }
@@ -216,25 +264,8 @@ body {
   margin: 0;
 }
 
-@media (max-width: 640px) {
-  .landing {
-    flex-direction: column;
-  }
-  .landing-sidebar {
-    width: auto;
-    margin: 16px 16px 0;
-  }
-  .landing-nav-link {
-    display: inline-block;
-    margin-right: 8px;
-  }
-  .landing-content {
-    padding: 32px 20px;
-  }
-  .landing-polaroid {
-    width: 200px;
-  }
+@media (max-width: 480px) {
   .landing-content h1 {
-    font-size: 32px;
+    font-size: 30px;
   }
 }

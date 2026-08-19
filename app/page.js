@@ -11,6 +11,7 @@ export default function Home() {
   const [liveEvent, setLiveEvent] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     async function loadLiveEvent() {
@@ -41,7 +42,6 @@ export default function Home() {
     ? computeWallPositions(submissions.map((s) => s.id), liveEvent.id, MINI_WALL_WIDTH, MINI_WALL_HEIGHT)
     : {};
 
-  // Fixed decorative positions for the "no live event" empty-frame state.
   const emptyFrames = [
     { top: 10, left: 30, rotate: -8 },
     { top: 60, left: 190, rotate: 6 },
@@ -52,8 +52,23 @@ export default function Home() {
 
   return (
     <main className="landing">
-      <aside className="landing-sidebar">
-        <h2 className="landing-logo">Ephemera</h2>
+      <button
+        className="landing-menu-toggle"
+        onClick={() => setMenuOpen(true)}
+        aria-label="Open menu"
+      >
+        ☰
+      </button>
+
+      {menuOpen && <div className="landing-backdrop" onClick={() => setMenuOpen(false)} />}
+
+      <aside className={`landing-sidebar ${menuOpen ? 'landing-sidebar-open' : ''}`}>
+        <div className="landing-sidebar-header">
+          <h2 className="landing-logo">Ephemera</h2>
+          <button className="landing-menu-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+            ✕
+          </button>
+        </div>
         <nav>
           <a href="/owner/dashboard" className="landing-nav-link">
             Owner dashboard
