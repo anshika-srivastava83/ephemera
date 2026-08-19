@@ -12,6 +12,27 @@ export default function Home() {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showClosePrompt, setShowClosePrompt] = useState(false);
+  const [closePassword, setClosePassword] = useState('');
+  const [closeStatus, setCloseStatus] = useState('');
+
+  async function closeLiveEvent() {
+    setCloseStatus('Closing...');
+    const res = await fetch(`/api/events/${liveEvent.id}/close`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ownerPassword: closePassword }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      setCloseStatus(`Error: ${data.error || 'could not close event'}`);
+      return;
+    }
+    setCloseStatus('Event closed.');
+    setShowClosePrompt(false);
+    setClosePassword('');
+    setLiveEvent(null);
+  }
 
   useEffect(() => {
     async function loadLiveEvent() {
@@ -115,12 +136,50 @@ export default function Home() {
             ))}
         </div>
 
-        <h1>Ephemera</h1>
+                <h1>Ephemera</h1>
         <p>
           {liveEvent
             ? `A live polaroid wall, built by everyone at ${liveEvent.name}.`
             : 'A live polaroid wall, built by everyone at the event.'}
         </p>
+
+        {!loading && liveEvent && (
+          <div className="landing-close-section">
+            {!showClosePrompt ? (
+              <button
+                className="landing-close-toggle"
+                onClick={() => setShowClosePrompt(true)}
+              >
+                Close this event
+              </button>
+            ) : (
+              <div className="landing-close-form">
+                <input
+                  type="password"
+                  className="landing-close-input"
+                  placeholder="Owner password"
+                  value={closePassword}
+                  onChange={(e) => setClosePassword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && closePassword && closeLiveEvent()}
+                />
+                <button onClick={closeLiveEvent} disabled={!closePassword}>
+                  Confirm close
+                </button>
+                <button
+                  className="landing-close-cancel"
+                  onClick={() => {
+                    setShowClosePrompt(false);
+                    setClosePassword('');
+                    setCloseStatus('');
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+            {closeStatus && <p className="landing-close-status">{closeStatus}</p>}
+          </div>
+        )}
       </section>
     </main>
   );

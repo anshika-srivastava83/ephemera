@@ -270,6 +270,65 @@ body {
   }
 }
 
+.landing-close-section {
+  margin-top: 20px;
+}
+
+.landing-close-toggle {
+  border: 2px solid var(--owner-accent, #8a6fc2);
+  background: transparent;
+  color: var(--owner-accent-dark, #6f52ab);
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.landing-close-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.landing-close-input {
+  font-size: 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #d8cdf0;
+  background: #fff;
+  color: var(--owner-text, #2e2440);
+}
+
+.landing-close-form button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--owner-accent-dark, #6f52ab);
+  color: #fff;
+}
+
+.landing-close-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.landing-close-cancel {
+  background: transparent !important;
+  color: #8a7fa8 !important;
+}
+
+.landing-close-status {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #6b6280;
+}
+
 .owner-page {
   min-height: 100vh;
   background: var(--owner-bg);
