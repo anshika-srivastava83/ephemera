@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import QRCode from 'qrcode.react';
 
 export default function OwnerDashboard() {
@@ -14,8 +14,10 @@ export default function OwnerDashboard() {
   const [event, setEvent] = useState(null);
   const [status, setStatus] = useState('');
   const [passwordRevealed, setPasswordRevealed] = useState(false);
+  const [eyeOffset, setEyeOffset] = useState(14);
+  const mirrorRef = useRef(null);
 
-  useEffect(() => {
+    useEffect(() => {
     async function loadPublicEvents() {
       const res = await fetch('/api/events');
       const data = await res.json();
@@ -23,6 +25,15 @@ export default function OwnerDashboard() {
     }
     loadPublicEvents();
   }, []);
+
+  useLayoutEffect(() => {
+    if (!mirrorRef.current) return;
+    const textWidth = mirrorRef.current.offsetWidth;
+    const inputPaddingLeft = 14;
+    const eyeWidth = 24;
+    const maxOffset = 220; // keep it inside the input box regardless of length
+    setEyeOffset(Math.min(inputPaddingLeft + textWidth + 6, maxOffset));
+  }, [password, passwordRevealed]);
 
     async function loadEvents() {
     setStatus('Loading events...');
@@ -125,9 +136,9 @@ export default function OwnerDashboard() {
       <div className="owner-card">
         <h1 className="owner-heading">Ephemera — owner dashboard</h1>
 
-        {!event && !role && (
+                {!event && !role && (
           <div className="owner-login-row">
-            <div className="owner-password-wrap">
+            <div className="owner-password-wrap" style={{ position: 'relative', flex: 1 }}>
               <input
                 type={password.length > 0 && passwordRevealed ? 'text' : 'password'}
                 className="owner-input owner-input-block"
@@ -140,18 +151,40 @@ export default function OwnerDashboard() {
                 onKeyDown={(e) => e.key === 'Enter' && password && loadEvents()}
               />
               <span
+                ref={mirrorRef}
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  visibility: 'hidden',
+                  whiteSpace: 'pre',
+                  fontSize: 16,
+                  fontFamily: 'inherit',
+                  letterSpacing: passwordRevealed ? 'normal' : '2px',
+                }}
+              >
+                {passwordRevealed ? password : '•'.repeat(password.length)}
+              </span>
+              <span
                 className="owner-password-eye"
                 aria-hidden="true"
-                style={{ pointerEvents: password.length > 0 ? 'auto' : 'none', cursor: 'pointer' }}
+                style={{
+                  position: 'absolute',
+                  left: eyeOffset,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  display: password.length > 0 ? 'flex' : 'none',
+                  pointerEvents: 'auto',
+                  cursor: 'pointer',
+                }}
                 onClick={() => password.length > 0 && setPasswordRevealed((r) => !r)}
               >
-                {password.length === 0 || passwordRevealed ? (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8a7fa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                {passwordRevealed ? (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a7fa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 ) : (
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8a7fa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a7fa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
                     <circle cx="12" cy="12" r="3" />
                     <line x1="2" y1="2" x2="22" y2="22" />
@@ -164,7 +197,6 @@ export default function OwnerDashboard() {
             </button>
           </div>
         )}
-
         {!event && role && (
           <div className="owner-login-row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="owner-empty-text">Logged in as {role}</span>
