@@ -164,29 +164,42 @@ body {
   position: relative;
 }
 
-.landing-polaroid {
-  background: #fff;
-  padding: 18px 18px 46px;
-  box-shadow: 0 24px 50px rgba(111, 82, 171, 0.28), 0 4px 12px rgba(0, 0, 0, 0.08);
-  transform: rotate(-4deg);
+.landing-wall {
+  position: relative;
+  width: 340px;
+  height: 260px;
   margin-bottom: 40px;
-  width: 240px;
-  border-radius: 2px;
 }
 
-.landing-polaroid-photo {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  background: linear-gradient(135deg, #d9a35c 0%, #a06b2a 55%, #4a2f18 100%);
+.landing-wall-empty-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b6280;
+  font-size: 13px;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.landing-mini-polaroid {
+  position: absolute;
+  width: 70px;
+  background: #fff;
+  padding: 5px 5px 12px;
+  box-shadow: 0 8px 18px rgba(111, 82, 171, 0.25);
   border-radius: 1px;
 }
 
-.landing-polaroid-caption {
-  color: #3a2415;
-  font-family: 'Comic Sans MS', cursive;
-  text-align: center;
-  margin-top: 12px;
-  font-size: 15px;
+.landing-empty-polaroid {
+  position: absolute;
+  width: 64px;
+  height: 78px;
+  background: #fff;
+  border: 2px dashed #d8cdf0;
+  box-shadow: 0 6px 16px rgba(111, 82, 171, 0.12);
+  border-radius: 2px;
 }
 
 .landing-content h1 {
