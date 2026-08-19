@@ -269,3 +269,57 @@ body {
     font-size: 30px;
   }
 }
+
+.owner-page {
+  min-height: 100vh;
+  background: var(--owner-bg);
+  padding: 24px 16px;
+}
+
+.owner-card {
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--owner-card-bg);
+  border-radius: 16px;
+  padding: 24px 20px;
+  box-shadow: 0 8px 24px rgba(111, 82, 171, 0.15);
+  color: var(--owner-text);
+}
+
+.owner-subheading {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #8a7fa8;
+  margin: 24px 0 8px;
+}
+
+.owner-empty-text {
+  color: #9a8fb5;
+  font-size: 14px;
+}
+
+.event-row {
+  display: block;
+  text-decoration: none;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  background: #f8f5fc;
+  color: var(--owner-text);
+}
+
+.event-row:hover {
+  background: #f0eaf9;
+}
+
+.event-row-name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.event-row-meta {
+  font-size: 12px;
+  color: #8a7fa8;
+  margin-top: 2px;
+}

@@ -5,7 +5,7 @@ import { isOwner, isOwnerOrCollaborator } from '../../../lib/auth';
 // POST /api/events  { name, ownerPassword }
 // Creates a brand-new event -> a brand-new event id -> a brand-new QR.
 export async function POST(request) {
-  const { name, ownerPassword, maxSubmissions } = await request.json();
+  const { name, ownerPassword, maxSubmissions, location, scheduledAt } = await request.json();
 
   if (!isOwner(ownerPassword)) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
@@ -24,6 +24,8 @@ export async function POST(request) {
       status: 'open',
       owner_id: crypto.randomUUID(),
       max_submissions: maxSubmissions && maxSubmissions > 0 ? maxSubmissions : 500,
+      location: location || null,
+      scheduled_at: scheduledAt || null,
     })
     .select()
     .single();

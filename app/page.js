@@ -70,11 +70,8 @@ export default function Home() {
           </button>
         </div>
         <nav>
-          <a href="/owner/dashboard" className="landing-nav-link">
-            Owner dashboard
-          </a>
-          <a href="/owner/dashboard" className="landing-nav-link">
-            Collaborator dashboard
+          <a href="/events" className="landing-nav-link">
+            Events
           </a>
         </nav>
       </aside>

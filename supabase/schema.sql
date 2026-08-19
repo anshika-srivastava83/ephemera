@@ -3,6 +3,8 @@ create extension if not exists "uuid-ossp";
 create table events (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
+  alter table events add column if not exists location text;
+  alter table events add column if not exists scheduled_at timestamptz;
   owner_id uuid not null,
   status text not null default 'open',
   alter table events add column if not exists max_submissions integer not null default 500;
