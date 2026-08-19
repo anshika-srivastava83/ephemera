@@ -13,6 +13,7 @@ export default function OwnerDashboard() {
   const [scheduledAt, setScheduledAt] = useState('');
   const [event, setEvent] = useState(null);
   const [status, setStatus] = useState('');
+  const [passwordRevealed, setPasswordRevealed] = useState(false);
 
   useEffect(() => {
     async function loadPublicEvents() {
@@ -124,16 +125,40 @@ export default function OwnerDashboard() {
       <div className="owner-card">
         <h1 className="owner-heading">Ephemera — owner dashboard</h1>
 
-                {!event && !role && (
+        {!event && !role && (
           <div className="owner-login-row">
-            <input
-              type="password"
-              className="owner-input"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && password && loadEvents()}
-            />
+            <div className="owner-password-wrap">
+              <input
+                type={password.length > 0 && passwordRevealed ? 'text' : 'password'}
+                className="owner-input owner-input-block"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordRevealed(false);
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && password && loadEvents()}
+              />
+              <span
+                className="owner-password-eye"
+                aria-hidden="true"
+                style={{ pointerEvents: password.length > 0 ? 'auto' : 'none', cursor: 'pointer' }}
+                onClick={() => password.length > 0 && setPasswordRevealed((r) => !r)}
+              >
+                {password.length === 0 || passwordRevealed ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8a7fa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8a7fa8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                    <circle cx="12" cy="12" r="3" />
+                    <line x1="2" y1="2" x2="22" y2="22" />
+                  </svg>
+                )}
+              </span>
+            </div>
             <button className="owner-button" onClick={loadEvents} disabled={!password}>
               Log in
             </button>
