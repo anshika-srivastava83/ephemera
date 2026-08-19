@@ -381,4 +381,98 @@ body {
   font-size: 12px;
   color: #8a7fa8;
   margin-top: 2px;
+  display: block;
+}
+
+.event-row-clickable {
+  display: block;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.event-row-locked {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.event-row-pending {
+  color: #b8860b;
+  font-weight: 600;
+}
+
+.owner-heading {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 26px;
+  color: var(--owner-text);
+  margin: 0 0 20px;
+}
+
+.owner-login-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.owner-label {
+  display: block;
+  font-size: 13px;
+  color: #6b6280;
+  margin: 12px 0 4px;
+}
+
+.owner-input {
+  font-size: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #d8cdf0;
+  background: #fff;
+  color: var(--owner-text);
+}
+
+.owner-input-block {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+}
+
+.owner-button {
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: var(--owner-accent-dark);
+  color: #fff;
+  margin-top: 12px;
+}
+
+.owner-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.owner-button-secondary {
+  border: 2px solid var(--owner-accent);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: var(--owner-accent-dark);
+}
+
+.owner-button-danger {
+  border: 1px solid #d98a8a;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fdf0f0;
+  color: #b23a3a;
 }

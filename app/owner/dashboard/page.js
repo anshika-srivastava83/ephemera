@@ -38,7 +38,7 @@ export default function OwnerDashboard() {
 
   async function createEvent() {
     setStatus('Creating event...');
-        const res = await fetch('/api/events', {
+    const res = await fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -110,123 +110,157 @@ export default function OwnerDashboard() {
     : '';
 
   return (
-    <main style={{ maxWidth: 480, margin: '40px auto', padding: 16 }}>
-      <h1>Ephemera — owner dashboard</h1>
+    <main className="owner-page">
+      <div className="owner-card">
+        <h1 className="owner-heading">Ephemera — owner dashboard</h1>
 
-            <label>Password</label>
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && password && loadEvents()}
-      />
-      <button onClick={loadEvents} disabled={!password}>
-        Log in
-      </button>
-
-            {!event && (
-        <div style={{ marginTop: 24 }}>
-          <h2>{role ? 'Your events' : 'Events'}</h2>
-          {events.length === 0 && <p>No events yet.</p>}
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {events.map((ev) =>
-              role ? (
-                <li key={ev.id} style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
-                  <button onClick={() => setEvent(ev)} style={{ flex: 1, textAlign: 'left' }}>
-                    {ev.name} — {ev.status}
-                    {ev.location ? ` — ${ev.location}` : ''}
-                    {ev.scheduled_at ? ` — ${new Date(ev.scheduled_at).toLocaleDateString()}` : ''}
-                    {' — '}
-                    <span style={{ color: ev.pendingCount > 0 ? '#ffb300' : 'inherit' }}>
-                      {ev.pendingCount} pending
-                    </span>
-                    {', '}
-                    {ev.approvedCount} approved
-                  </button>
-                  {role === 'owner' && (
-                    <a href={`/owner/event/${ev.id}/gallery`} style={{ alignSelf: 'center' }}>
-                      Gallery
-                    </a>
-                  )}
-                  <a href={`/owner/event/${ev.id}/select-style`} style={{ alignSelf: 'center' }}>
-                    Wall style
-                  </a>
-                </li>
-              ) : (
-                <li key={ev.id} style={{ marginBottom: 8, padding: '8px 0', opacity: 0.85 }}>
-                  {ev.name} — {ev.status}
-                  {ev.location ? ` — ${ev.location}` : ''}
-                  {ev.scheduled_at ? ` — ${new Date(ev.scheduled_at).toLocaleDateString()}` : ''}
-                </li>
-              )
-            )}
-          </ul>
-
-          {role === 'owner' && (
-            <div style={{ marginTop: 16 }}>
-              <label>New event name</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mehfil Sep 19" />
-              <label>Location (optional)</label>
-              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Terrace hall" />
-              <label>Date (optional)</label>
-              <input
-                type="date"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-              />
-              <label>Submission cap (optional, defaults to 500)</label>
-              <input
-                type="number"
-                value={maxSubmissions}
-                onChange={(e) => setMaxSubmissions(e.target.value)}
-                placeholder="500"
-              />
-              <button onClick={createEvent} disabled={!name}>
-                Create new event (new QR)
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {event && (
-        <div style={{ marginTop: 24 }}>
-          <button onClick={() => setEvent(null)} style={{ marginBottom: 12 }}>
-            ← Back to events
-          </button>
-          <p>Event: {event.name}</p>
-          <QRCode value={submitUrl} size={220} />
-          <p>{submitUrl}</p>
-
-          {role === 'owner' && <button onClick={closeQr}>Close QR (stop submissions)</button>}
-
-          <p>
-            Next: go to <a href={`/owner/event/${event.id}/moderate`}>the moderation screen</a> to
-            swipe through submissions.
-          </p>
-
-          <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
-            <a href={`/owner/event/${event.id}/gallery`}>Gallery</a>
-            <a href={`/owner/event/${event.id}/select-style`}>Wall style</a>
-            <a href={`/owner/event/${event.id}/finalize`}>Finalize</a>
-            <a href={`/event/${event.id}/wall`} target="_blank" rel="noopener noreferrer">
-              View public wall
-            </a>
+        {!event && (
+          <div className="owner-login-row">
+            <input
+              type="password"
+              className="owner-input"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && password && loadEvents()}
+            />
+            <button className="owner-button" onClick={loadEvents} disabled={!password}>
+              Log in
+            </button>
           </div>
+        )}
 
-          {role === 'owner' && (
-            <div style={{ marginTop: 24, borderTop: '1px solid #444', paddingTop: 16 }}>
-              <p style={{ fontSize: 13, opacity: 0.8 }}>Danger zone</p>
-              <button onClick={disposePhotos} style={{ marginRight: 12 }}>
-                Dispose photos
-              </button>
-              <button onClick={deleteWall}>Delete wall</button>
+        {!event && (
+          <div style={{ marginTop: 24 }}>
+            <p className="owner-subheading">{role ? 'Your events' : 'Events'}</p>
+            {events.length === 0 && <p className="owner-empty-text">No events yet.</p>}
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {events.map((ev) =>
+                role ? (
+                  <li key={ev.id} style={{ marginBottom: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <button className="event-row event-row-clickable" onClick={() => setEvent(ev)} style={{ flex: 1 }}>
+                      <span className="event-row-name">{ev.name}</span>
+                      <span className="event-row-meta">
+                        {ev.status}
+                        {ev.location ? ` — ${ev.location}` : ''}
+                        {ev.scheduled_at ? ` — ${new Date(ev.scheduled_at).toLocaleDateString()}` : ''}
+                        {' — '}
+                        <span className={ev.pendingCount > 0 ? 'event-row-pending' : ''}>
+                          {ev.pendingCount} pending
+                        </span>
+                        {', '}
+                        {ev.approvedCount} approved
+                      </span>
+                    </button>
+                    {role === 'owner' && (
+                      <a className="landing-nav-link" style={{ padding: '8px 10px' }} href={`/owner/event/${ev.id}/gallery`}>
+                        Gallery
+                      </a>
+                    )}
+                    <a className="landing-nav-link" style={{ padding: '8px 10px' }} href={`/owner/event/${ev.id}/select-style`}>
+                      Wall style
+                    </a>
+                  </li>
+                ) : (
+                  <li key={ev.id} className="event-row event-row-locked">
+                    <span className="event-row-name">{ev.name}</span>
+                    <span className="event-row-meta">
+                      {ev.status}
+                      {ev.location ? ` — ${ev.location}` : ''}
+                      {ev.scheduled_at ? ` — ${new Date(ev.scheduled_at).toLocaleDateString()}` : ''}
+                    </span>
+                  </li>
+                )
+              )}
+            </ul>
+
+            {role === 'owner' && (
+              <div style={{ marginTop: 24 }}>
+                <p className="owner-subheading">Create new event</p>
+                <label className="owner-label">Event name</label>
+                <input
+                  className="owner-input owner-input-block"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Mehfil Sep 19"
+                />
+                <label className="owner-label">Location (optional)</label>
+                <input
+                  className="owner-input owner-input-block"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Terrace hall"
+                />
+                <label className="owner-label">Date (optional)</label>
+                <input
+                  type="date"
+                  className="owner-input owner-input-block"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                />
+                <label className="owner-label">Submission cap (optional, defaults to 500)</label>
+                <input
+                  type="number"
+                  className="owner-input owner-input-block"
+                  value={maxSubmissions}
+                  onChange={(e) => setMaxSubmissions(e.target.value)}
+                  placeholder="500"
+                />
+                <button className="owner-button" onClick={createEvent} disabled={!name}>
+                  Create new event (new QR)
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {event && (
+          <div style={{ marginTop: 24 }}>
+            <button className="owner-button-secondary" onClick={() => setEvent(null)}>
+              ← Back to events
+            </button>
+            <p className="owner-subheading" style={{ marginTop: 20 }}>{event.name}</p>
+            <div style={{ background: '#fff', display: 'inline-block', padding: 12, borderRadius: 12 }}>
+              <QRCode value={submitUrl} size={220} />
             </div>
-          )}
-        </div>
-      )}
+            <p className="owner-empty-text" style={{ wordBreak: 'break-all' }}>{submitUrl}</p>
 
-      {status && <p>{status}</p>}
+            {role === 'owner' && (
+              <button className="owner-button" onClick={closeQr}>
+                Close QR (stop submissions)
+              </button>
+            )}
+
+            <p style={{ marginTop: 16 }}>
+              Next: go to <a href={`/owner/event/${event.id}/moderate`}>the moderation screen</a> to
+              swipe through submissions.
+            </p>
+
+            <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
+              <a href={`/owner/event/${event.id}/gallery`}>Gallery</a>
+              <a href={`/owner/event/${event.id}/select-style`}>Wall style</a>
+              <a href={`/owner/event/${event.id}/finalize`}>Finalize</a>
+              <a href={`/event/${event.id}/wall`} target="_blank" rel="noopener noreferrer">
+                View public wall
+              </a>
+            </div>
+
+            {role === 'owner' && (
+              <div style={{ marginTop: 24, borderTop: '1px solid #e5ddf5', paddingTop: 16 }}>
+                <p className="owner-subheading" style={{ margin: '0 0 8px' }}>Danger zone</p>
+                <button className="owner-button-danger" onClick={disposePhotos} style={{ marginRight: 12 }}>
+                  Dispose photos
+                </button>
+                <button className="owner-button-danger" onClick={deleteWall}>
+                  Delete wall
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {status && <p className="owner-empty-text" style={{ marginTop: 12 }}>{status}</p>}
+      </div>
     </main>
   );
 }
