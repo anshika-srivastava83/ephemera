@@ -111,3 +111,85 @@ body {
   cursor: pointer;
   margin-bottom: 12px;
 }
+
+.landing {
+  min-height: 100vh;
+  display: flex;
+  background: #111;
+}
+
+.landing-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #1a1a1a;
+  padding: 24px 20px;
+  border-right: 1px solid #2a2a2a;
+}
+
+.landing-logo {
+  color: #fafafa;
+  margin: 0 0 24px;
+  font-size: 20px;
+}
+
+.landing-nav-link {
+  display: block;
+  color: #cfcfcf;
+  text-decoration: none;
+  padding: 10px 0;
+  border-bottom: 1px solid #2a2a2a;
+  font-size: 14px;
+}
+
+.landing-nav-link:hover {
+  color: #fff;
+}
+
+.landing-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.landing-polaroid {
+  background: #fff;
+  padding: 16px 16px 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transform: rotate(-4deg);
+  margin-bottom: 32px;
+  width: 220px;
+}
+
+.landing-polaroid-photo {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(135deg, #c8873a, #4a2f18);
+}
+
+.landing-polaroid-caption {
+  color: #222;
+  font-family: 'Comic Sans MS', cursive;
+  text-align: center;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .landing {
+    flex-direction: column;
+  }
+  .landing-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  .landing-nav-link {
+    display: inline-block;
+    margin-right: 16px;
+    border-bottom: none;
+  }
+}
