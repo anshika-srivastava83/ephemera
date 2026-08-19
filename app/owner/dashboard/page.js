@@ -172,6 +172,15 @@ export default function OwnerDashboard() {
             swipe through submissions.
           </p>
 
+          <div style={{ display: 'flex', gap: 16, marginTop: 12, flexWrap: 'wrap' }}>
+            <a href={`/owner/event/${event.id}/gallery`}>Gallery</a>
+            <a href={`/owner/event/${event.id}/select-style`}>Wall style</a>
+            <a href={`/owner/event/${event.id}/finalize`}>Finalize</a>
+            <a href={`/event/${event.id}/wall`} target="_blank" rel="noopener noreferrer">
+              View public wall
+            </a>
+          </div>
+
           {role === 'owner' && (
             <div style={{ marginTop: 24, borderTop: '1px solid #444', paddingTop: 16 }}>
               <p style={{ fontSize: 13, opacity: 0.8 }}>Danger zone</p>
