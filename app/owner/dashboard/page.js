@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import QRCode from 'qrcode.react';
 
 export default function OwnerDashboard() {
@@ -9,8 +9,19 @@ export default function OwnerDashboard() {
   const [events, setEvents] = useState([]);
   const [name, setName] = useState('');
   const [maxSubmissions, setMaxSubmissions] = useState('');
+  const [location, setLocation] = useState('');
+  const [scheduledAt, setScheduledAt] = useState('');
   const [event, setEvent] = useState(null);
   const [status, setStatus] = useState('');
+
+  useEffect(() => {
+    async function loadPublicEvents() {
+      const res = await fetch('/api/events');
+      const data = await res.json();
+      if (res.ok) setEvents(data.events || []);
+    }
+    loadPublicEvents();
+  }, []);
 
   async function loadEvents() {
     setStatus('Loading events...');
@@ -27,13 +38,15 @@ export default function OwnerDashboard() {
 
   async function createEvent() {
     setStatus('Creating event...');
-    const res = await fetch('/api/events', {
+        const res = await fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name,
         ownerPassword: password,
         maxSubmissions: maxSubmissions ? Number(maxSubmissions) : undefined,
+        location: location || undefined,
+        scheduledAt: scheduledAt || undefined,
       }),
     });
     const data = await res.json();
@@ -43,6 +56,8 @@ export default function OwnerDashboard() {
     }
     setEvent(data.event);
     setName('');
+    setLocation('');
+    setScheduledAt('');
     loadEvents();
     setStatus('');
   }
@@ -109,38 +124,56 @@ export default function OwnerDashboard() {
         Log in
       </button>
 
-      {role && !event && (
+            {!event && (
         <div style={{ marginTop: 24 }}>
-          <h2>Your events</h2>
+          <h2>{role ? 'Your events' : 'Events'}</h2>
           {events.length === 0 && <p>No events yet.</p>}
           <ul style={{ listStyle: 'none', padding: 0 }}>
-            {events.map((ev) => (
-              <li key={ev.id} style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
-                <button onClick={() => setEvent(ev)} style={{ flex: 1, textAlign: 'left' }}>
-                  {ev.name} — {ev.status} — {new Date(ev.created_at).toLocaleDateString()}
-                  {' — '}
-                  <span style={{ color: ev.pendingCount > 0 ? '#ffb300' : 'inherit' }}>
-                    {ev.pendingCount} pending
-                  </span>
-                  {', '}
-                  {ev.approvedCount} approved
-                </button>
-                {role === 'owner' && (
-                  <a href={`/owner/event/${ev.id}/gallery`} style={{ alignSelf: 'center' }}>
-                    Gallery
+            {events.map((ev) =>
+              role ? (
+                <li key={ev.id} style={{ marginBottom: 8, display: 'flex', gap: 8 }}>
+                  <button onClick={() => setEvent(ev)} style={{ flex: 1, textAlign: 'left' }}>
+                    {ev.name} — {ev.status}
+                    {ev.location ? ` — ${ev.location}` : ''}
+                    {ev.scheduled_at ? ` — ${new Date(ev.scheduled_at).toLocaleDateString()}` : ''}
+                    {' — '}
+                    <span style={{ color: ev.pendingCount > 0 ? '#ffb300' : 'inherit' }}>
+                      {ev.pendingCount} pending
+                    </span>
+                    {', '}
+                    {ev.approvedCount} approved
+                  </button>
+                  {role === 'owner' && (
+                    <a href={`/owner/event/${ev.id}/gallery`} style={{ alignSelf: 'center' }}>
+                      Gallery
+                    </a>
+                  )}
+                  <a href={`/owner/event/${ev.id}/select-style`} style={{ alignSelf: 'center' }}>
+                    Wall style
                   </a>
-                )}
-                <a href={`/owner/event/${ev.id}/select-style`} style={{ alignSelf: 'center' }}>
-                  Wall style
-                </a>
-              </li>
-            ))}
+                </li>
+              ) : (
+                <li key={ev.id} style={{ marginBottom: 8, padding: '8px 0', opacity: 0.85 }}>
+                  {ev.name} — {ev.status}
+                  {ev.location ? ` — ${ev.location}` : ''}
+                  {ev.scheduled_at ? ` — ${new Date(ev.scheduled_at).toLocaleDateString()}` : ''}
+                </li>
+              )
+            )}
           </ul>
 
           {role === 'owner' && (
             <div style={{ marginTop: 16 }}>
               <label>New event name</label>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mehfil Sep 19" />
+              <label>Location (optional)</label>
+              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Terrace hall" />
+              <label>Date (optional)</label>
+              <input
+                type="date"
+                value={scheduledAt}
+                onChange={(e) => setScheduledAt(e.target.value)}
+              />
               <label>Submission cap (optional, defaults to 500)</label>
               <input
                 type="number"

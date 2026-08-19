@@ -42,6 +42,18 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const password = searchParams.get('password');
 
+  // No password: return a bare public list (no counts, no role) so the
+  // dashboard can show event name/date/location before login.
+  if (!password) {
+    const { data, error } = await supabaseAdmin()
+      .from('events')
+      .select('id, name, status, location, scheduled_at, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ events: data, role: null });
+  }
+
   if (!isOwnerOrCollaborator(password)) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }

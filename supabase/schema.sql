@@ -3,13 +3,13 @@ create extension if not exists "uuid-ossp";
 create table events (
   id uuid primary key default uuid_generate_v4(),
   name text not null,
-  alter table events add column if not exists location text;
-  alter table events add column if not exists scheduled_at timestamptz;
+  location text,
+  scheduled_at timestamptz,
   owner_id uuid not null,
   status text not null default 'open',
-  alter table events add column if not exists max_submissions integer not null default 500;
+  max_submissions integer not null default 500,
   chosen_layout_id text,
-  alter table events add column if not exists chosen_layout_ids text[] not null default '{}';
+  chosen_layout_ids text[] not null default '{}',
   final_wall_image_url text,
   created_at timestamptz not null default now()
 );
