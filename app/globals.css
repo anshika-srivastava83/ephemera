@@ -10,10 +10,6 @@ html {
   box-sizing: border-box;
 }
 
-html {
-  color-scheme: light;
-}
-
 :root {
   /* Guest-facing (wooden/vintage) palette -- lighter, warmer */
   --guest-bg: #e6d3ae;
@@ -34,8 +30,8 @@ html {
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
-  background: #111;
-  color: #fafafa;
+  background: #f3effa;
+  color: #2e2440;
 }
 
 .polaroid {
