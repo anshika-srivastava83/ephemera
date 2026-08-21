@@ -14,8 +14,6 @@ export default function OwnerDashboard() {
   const [event, setEvent] = useState(null);
   const [status, setStatus] = useState('');
   const [passwordRevealed, setPasswordRevealed] = useState(false);
-  const [eyeOffset, setEyeOffset] = useState(14);
-  const mirrorRef = useRef(null);
 
     useEffect(() => {
     async function loadPublicEvents() {
@@ -25,15 +23,6 @@ export default function OwnerDashboard() {
     }
     loadPublicEvents();
   }, []);
-
-  useLayoutEffect(() => {
-    if (!mirrorRef.current) return;
-    const textWidth = mirrorRef.current.offsetWidth;
-    const inputPaddingLeft = 14;
-    const eyeWidth = 24;
-    const maxOffset = 220; // keep it inside the input box regardless of length
-    setEyeOffset(Math.min(inputPaddingLeft + textWidth + 6, maxOffset));
-  }, [password, passwordRevealed]);
 
     async function loadEvents() {
     setStatus('Loading events...');
@@ -138,7 +127,7 @@ export default function OwnerDashboard() {
 
                 {!event && !role && (
           <div className="owner-login-row">
-            <div className="owner-password-wrap" style={{ position: 'relative', flex: 1 }}>
+                        <div className="owner-password-wrap" style={{ position: 'relative', flex: 1 }}>
               <input
                 type={password.length > 0 && passwordRevealed ? 'text' : 'password'}
                 className="owner-input owner-input-block"
@@ -149,27 +138,14 @@ export default function OwnerDashboard() {
                   setPasswordRevealed(false);
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && password && loadEvents()}
+                style={{ paddingRight: 40 }}
               />
-              <span
-                ref={mirrorRef}
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  visibility: 'hidden',
-                  whiteSpace: 'pre',
-                  fontSize: 16,
-                  fontFamily: 'inherit',
-                  letterSpacing: passwordRevealed ? 'normal' : '2px',
-                }}
-              >
-                {passwordRevealed ? password : '•'.repeat(password.length)}
-              </span>
               <span
                 className="owner-password-eye"
                 aria-hidden="true"
                 style={{
                   position: 'absolute',
-                  left: eyeOffset,
+                  right: 12,
                   top: '50%',
                   transform: 'translateY(-50%)',
                   display: password.length > 0 ? 'flex' : 'none',
@@ -192,7 +168,7 @@ export default function OwnerDashboard() {
                 )}
               </span>
             </div>
-            <button className="owner-button" onClick={loadEvents} disabled={!password}>
+            <button className="owner-button" onClick={loadEvents} disabled={!password} style={{ marginTop: 0 }}>
               Log in
             </button>
           </div>
