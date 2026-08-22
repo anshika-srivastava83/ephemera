@@ -481,3 +481,46 @@ body {
   background: #fdf0f0;
   color: #b23a3a;
 }
+
+.mod-topbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e5ddf5;
+}
+
+.mod-icon-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 10px;
+  background: #f3effa;
+  color: #6f52ab;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.mod-icon-btn:hover {
+  background: #e9e0f7;
+}
+
+.mod-icon-btn-danger {
+  color: #b23a3a;
+  background: #fdf0f0;
+}
+
+.mod-icon-btn-danger:hover {
+  background: #f8dede;
+}
+
+.mod-qr-panel {
+  text-align: center;
+  margin-bottom: 20px;
+}
