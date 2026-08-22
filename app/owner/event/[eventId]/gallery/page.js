@@ -82,6 +82,45 @@ export default function GalleryPage({ params }) {
     setStatus('');
   }
 
+    async function editCaption(submission) {
+    const newCaption = window.prompt(
+      'Edit caption (leave blank to remove it):',
+      submission.caption
+    );
+    if (newCaption === null) return;
+    if (newCaption.length > 120) {
+      alert('Caption is too long (max 120 characters).');
+      return;
+    }
+
+    setStatus('Updating caption...');
+    const { compositePolaroid } = await import('../../../../../lib/compositePolaroid');
+    const polaroidBlob = await compositePolaroid(submission.photo_url, newCaption);
+    const polaroidPath = `${eventId}/${Date.now()}-polaroid-edited.jpg`;
+    const { supabasePublic } = await import('../../../../../lib/supabaseClient');
+    const { error: uploadError } = await supabasePublic.storage
+      .from('photos')
+      .upload(polaroidPath, polaroidBlob);
+    if (uploadError) {
+      setStatus(`Upload failed: ${uploadError.message}`);
+      return;
+    }
+    const { data: urlData } = supabasePublic.storage.from('photos').getPublicUrl(polaroidPath);
+
+    const res = await fetch(`/api/submissions/${submission.id}/update-caption`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ownerPassword: password, caption: newCaption, polaroidUrl: urlData.publicUrl }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(`Error: ${data.error}`);
+      return;
+    }
+    setStatus('Caption updated.');
+    loadAll();
+  }
+
   return (
     <main className="owner-page">
       <div className="owner-card" style={{ maxWidth: 900 }}>
@@ -145,8 +184,15 @@ export default function GalleryPage({ params }) {
                     />
                     {s.status}
                   </label>
-                  <img src={s.polaroid_url} alt={s.caption} style={{ width: '100%', borderRadius: 6 }} />
+                                    <img src={s.polaroid_url} alt={s.caption} style={{ width: '100%', borderRadius: 6 }} />
                   <p style={{ fontSize: 12, color: 'var(--owner-text)', margin: '8px 0' }}>{s.caption}</p>
+                  <button
+                    className="owner-button-secondary"
+                    onClick={() => editCaption(s)}
+                    style={{ width: '100%', padding: '6px 0', fontSize: 12, marginBottom: 8 }}
+                  >
+                    ✎ Edit caption
+                  </button>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
                     <a href={s.photo_url} download style={{ fontSize: 12, color: 'var(--owner-accent-dark)' }}>
                       Download raw

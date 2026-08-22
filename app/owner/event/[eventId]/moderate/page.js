@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import TinderCard from 'react-tinder-card';
 import QRCode from 'qrcode.react';
-import { compositePolaroid } from '../../../../../lib/compositePolaroid';
 
 const ICONS = {
   back: (
@@ -81,7 +80,6 @@ export default function ModeratePage({ params }) {
   const [password, setPassword] = useState(queryPassword);
   const [role] = useState(queryRole);
   const [pending, setPending] = useState([]);
-  const [approved, setApproved] = useState([]);
   const [unlocked, setUnlocked] = useState(false);
   const [lastAction, setLastAction] = useState(null);
   const [lastSubmissionId, setLastSubmissionId] = useState(null);
@@ -90,32 +88,23 @@ export default function ModeratePage({ params }) {
   const [showQr, setShowQr] = useState(false);
 
   useEffect(() => {
-    if (queryPassword) loadAll();
+    if (queryPassword) loadPending();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function loadAll() {
+  async function loadPending() {
     setStatus('Loading...');
-    const [pendingRes, approvedRes] = await Promise.all([
-      fetch(`/api/events/${eventId}/pending-submissions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ownerPassword: password }),
-      }),
-      fetch(`/api/events/${eventId}/approved-submissions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ownerPassword: password }),
-      }),
-    ]);
-    const pendingData = await pendingRes.json();
-    const approvedData = await approvedRes.json();
-    if (!pendingRes.ok) {
-      setStatus(`Error: ${pendingData.error}`);
+    const res = await fetch(`/api/events/${eventId}/pending-submissions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ownerPassword: password }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(`Error: ${data.error}`);
       return;
     }
-    setPending(pendingData.submissions || []);
-    setApproved(approvedData.submissions || []);
+    setPending(data.submissions || []);
     setUnlocked(true);
     setStatus('');
   }
@@ -134,7 +123,6 @@ export default function ModeratePage({ params }) {
 
     setPending((prev) => prev.filter((s) => s.id !== submissionId));
     setTimeout(() => setLastAction(null), 500);
-    if (direction === 'left') loadAll();
   }
 
   async function undoLast() {
@@ -145,45 +133,7 @@ export default function ModeratePage({ params }) {
       body: JSON.stringify({ ownerPassword: password }),
     });
     setCanUndo(false);
-    loadAll();
-  }
-
-  async function editCaption(submission) {
-    const newCaption = window.prompt(
-      'Edit caption (leave blank to remove it):',
-      submission.caption
-    );
-    if (newCaption === null) return;
-    if (newCaption.length > 120) {
-      alert('Caption is too long (max 120 characters).');
-      return;
-    }
-
-    setStatus('Updating caption...');
-    const polaroidBlob = await compositePolaroid(submission.photo_url, newCaption);
-    const polaroidPath = `${eventId}/${Date.now()}-polaroid-edited.jpg`;
-    const { supabasePublic } = await import('../../../../../lib/supabaseClient');
-    const { error: uploadError } = await supabasePublic.storage
-      .from('photos')
-      .upload(polaroidPath, polaroidBlob);
-    if (uploadError) {
-      setStatus(`Upload failed: ${uploadError.message}`);
-      return;
-    }
-    const { data: urlData } = supabasePublic.storage.from('photos').getPublicUrl(polaroidPath);
-
-    const res = await fetch(`/api/submissions/${submission.id}/update-caption`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ownerPassword: password, caption: newCaption, polaroidUrl: urlData.publicUrl }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setStatus(`Error: ${data.error}`);
-      return;
-    }
-    setStatus('Caption updated.');
-    loadAll();
+    loadPending();
   }
 
   async function closeQr() {
@@ -292,9 +242,9 @@ export default function ModeratePage({ params }) {
               placeholder="Owner or collaborator password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && password && loadAll()}
+              onKeyDown={(e) => e.key === 'Enter' && password && loadPending()}
             />
-            <button className="owner-button" onClick={loadAll} disabled={!password}>
+            <button className="owner-button" onClick={loadPending} disabled={!password}>
               Load submissions
             </button>
           </div>
@@ -317,12 +267,6 @@ export default function ModeratePage({ params }) {
                   swipeThreshold={80}
                 >
                   <div className="polaroid" style={{ position: 'relative', margin: '0 auto', width: 260 }}>
-                    <button
-                      onClick={() => editCaption(current)}
-                      style={{ position: 'absolute', top: 6, left: 6, fontSize: 12, zIndex: 2 }}
-                    >
-                      ✎ Edit
-                    </button>
                     <img src={current.polaroid_url} alt={current.caption} draggable="false" />
                   </div>
                 </TinderCard>
@@ -342,23 +286,8 @@ export default function ModeratePage({ params }) {
               </div>
             )}
 
-            <p className="owner-subheading" style={{ marginTop: 40, textAlign: 'center' }}>Already approved ({approved.length})</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginTop: 12 }}>
-              {approved.map((s) => (
-                <div key={s.id} className="polaroid" style={{ position: 'relative', width: 160 }}>
-                  <button
-                    onClick={() => editCaption(s)}
-                    style={{ position: 'absolute', top: 4, left: 4, fontSize: 10, zIndex: 2 }}
-                  >
-                    ✎ Edit
-                  </button>
-                  <img src={s.polaroid_url} alt={s.caption} />
-                </div>
-              ))}
-            </div>
-
             <p className="owner-empty-text" style={{ textAlign: 'center', marginTop: 24 }}>
-              Swipe left to approve, right to reject — or use the buttons.
+              Swipe left to approve, right to reject — or use the buttons. Approved photos and caption edits live in the Gallery.
             </p>
           </>
         )}
