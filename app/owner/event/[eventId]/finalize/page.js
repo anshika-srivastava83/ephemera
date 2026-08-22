@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { toPng } from 'html-to-image';
 import { supabasePublic } from '../../../../../lib/supabaseClient';
 import { computeWallPositions } from '../../../../../lib/wallLayout';
@@ -10,13 +11,22 @@ const WALL_HEIGHT = 900;
 
 export default function FinalizePage({ params }) {
   const { eventId } = params;
-  const [password, setPassword] = useState('');
+  const searchParams = useSearchParams();
+  const queryPassword = searchParams.get('password') || '';
+  const queryRole = searchParams.get('role') || '';
+
+  const [password, setPassword] = useState(queryPassword);
   const [unlocked, setUnlocked] = useState(false);
   const [approved, setApproved] = useState([]);
   const [chosenId, setChosenId] = useState(null);
   const [finalWallUrl, setFinalWallUrl] = useState(null);
   const [status, setStatus] = useState('');
   const wallRef = useRef(null);
+
+  useEffect(() => {
+    if (queryPassword) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function load() {
     setStatus('Loading...');
@@ -87,72 +97,84 @@ export default function FinalizePage({ params }) {
   );
 
   return (
-    <main style={{ maxWidth: WALL_WIDTH + 40, margin: '40px auto', padding: 16, textAlign: 'center' }}>
-      <h1>Finalize the wall</h1>
-      <p style={{ fontSize: 13, opacity: 0.8 }}>
-        This exports the current wall (using your selected style, or the auto style if none chosen)
-        as the official final image for this event.
-      </p>
-
-      {!unlocked && (
-        <div>
-          <input
-            type="password"
-            placeholder="Owner password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && password && load()}
-          />
-          <button onClick={load} disabled={!password}>
-            Load
-          </button>
+    <main className="owner-page">
+      <div className="owner-card" style={{ maxWidth: WALL_WIDTH + 80, textAlign: 'center' }}>
+        <div className="mod-topbar" style={{ justifyContent: 'flex-start' }}>
+          <a href={`/owner/event/${eventId}/moderate?password=${encodeURIComponent(password)}&role=${queryRole}`} className="mod-icon-btn" title="Back to moderate">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </a>
+          <h1 className="owner-heading" style={{ fontSize: 20, margin: 0 }}>Finalize the wall</h1>
         </div>
-      )}
+        <p className="owner-empty-text">
+          This exports the current wall (using your selected style, or the auto style if none chosen)
+          as the official final image for this event.
+        </p>
 
-      {unlocked && (
-        <>
-          <p>Style in use: {chosenId || 'auto-selected'} — {approved.length} approved photo{approved.length === 1 ? '' : 's'}</p>
-
-          <div
-            ref={wallRef}
-            style={{ position: 'relative', width: WALL_WIDTH, height: WALL_HEIGHT, background: '#1a1a1a', overflow: 'hidden', margin: '0 auto' }}
-          >
-            {approved.map((s) => {
-              const pos = positions[s.id];
-              if (!pos) return null;
-              return (
-                <img
-                  key={s.id}
-                  src={s.polaroid_url}
-                  alt=""
-                  crossOrigin="anonymous"
-                  className="polaroid"
-                  style={{
-                    left: pos.x,
-                    top: pos.y,
-                    transform: `translate(-50%, -50%) rotate(${pos.rotation}deg)`,
-                  }}
-                />
-              );
-            })}
+        {!unlocked && (
+          <div>
+            <input
+              type="password"
+              className="owner-input owner-input-block"
+              placeholder="Owner password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && password && load()}
+            />
+            <button className="owner-button" onClick={load} disabled={!password}>
+              Load
+            </button>
           </div>
+        )}
 
-          <button onClick={exportAndFinalize} style={{ marginTop: 16 }}>
-            Export & save as final wall
-          </button>
+        {unlocked && (
+          <>
+            <p className="owner-empty-text">
+              Style in use: {chosenId || 'auto-selected'} — {approved.length} approved photo{approved.length === 1 ? '' : 's'}
+            </p>
 
-          {finalWallUrl && (
-            <div style={{ marginTop: 16 }}>
-              <p>Current official final wall:</p>
-              <a href={finalWallUrl} download style={{ fontSize: 14 }}>
-                Download final wall image
-              </a>
+            <div
+              ref={wallRef}
+              style={{ position: 'relative', width: WALL_WIDTH, height: WALL_HEIGHT, background: 'var(--owner-bg)', overflow: 'hidden', margin: '0 auto', maxWidth: '100%' }}
+            >
+              {approved.map((s) => {
+                const pos = positions[s.id];
+                if (!pos) return null;
+                return (
+                  <img
+                    key={s.id}
+                    src={s.polaroid_url}
+                    alt=""
+                    crossOrigin="anonymous"
+                    className="polaroid"
+                    style={{
+                      left: pos.x,
+                      top: pos.y,
+                      transform: `translate(-50%, -50%) rotate(${pos.rotation}deg)`,
+                    }}
+                  />
+                );
+              })}
             </div>
-          )}
-        </>
-      )}
 
-      {status && <p>{status}</p>}
+            <button className="owner-button" onClick={exportAndFinalize} style={{ marginTop: 16 }}>
+              Export & save as final wall
+            </button>
+
+            {finalWallUrl && (
+              <div style={{ marginTop: 16 }}>
+                <p className="owner-empty-text">Current official final wall:</p>
+                <a href={finalWallUrl} download style={{ fontSize: 14, color: 'var(--owner-accent-dark)' }}>
+                  Download final wall image
+                </a>
+              </div>
+            )}
+          </>
+        )}
+
+        {status && <p className="owner-empty-text" style={{ marginTop: 12 }}>{status}</p>}
+      </div>
     </main>
   );
 }
