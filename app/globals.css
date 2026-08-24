@@ -19,7 +19,7 @@ html {
   --owner-bg: #f3effa;
   --owner-card-bg: #ffffff;
   --owner-accent: #8a6fc2;
-  --owner-accent-dark: #6f52ab;
+  --owner-accent-dark: #8a6fc2;
   --owner-text: #2e2440;
 }
 
@@ -505,6 +505,47 @@ body {
   color: #6f52ab;
   cursor: pointer;
   text-decoration: none;
+}
+
+.mod-swipe-card {
+  position: relative;
+  margin: 0 auto;
+  width: 260px;
+  border-radius: 28px;
+  border: 1.6px solid #e5ddf5;
+  background: #f8f5fc;
+  padding: 16px 16px 20px;
+  box-shadow: 0 8px 24px rgba(120, 90, 180, 0.08);
+}
+
+.mod-swipe-card img {
+  width: 100%;
+  border-radius: 14px;
+  display: block;
+}
+
+.mod-swipe-caption {
+  font-size: 13px;
+  color: var(--owner-text);
+  margin: 10px 4px 4px;
+  text-align: left;
+}
+
+.mod-swipe-edit-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 8px 0;
+  border-radius: 999px;
+  border: none;
+  background: var(--owner-accent-dark);
+  color: #fdfbff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.mod-swipe-edit-btn:hover {
+  opacity: 0.85;
 }
 
 .mod-icon-btn:hover {

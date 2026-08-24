@@ -136,6 +136,45 @@ export default function ModeratePage({ params }) {
     loadPending();
   }
 
+  async function editCaption(submission) {
+  const newCaption = window.prompt(
+    'Edit caption (leave blank to remove it):',
+    submission.caption
+  );
+  if (newCaption === null) return;
+  if (newCaption.length > 120) {
+    alert('Caption is too long (max 120 characters).');
+    return;
+  }
+
+  setStatus('Updating caption...');
+  const { compositePolaroid } = await import('../../../../../lib/compositePolaroid');
+  const polaroidBlob = await compositePolaroid(submission.photo_url, newCaption);
+  const polaroidPath = `${eventId}/${Date.now()}-polaroid-edited.jpg`;
+  const { supabasePublic } = await import('../../../../../lib/supabaseClient');
+  const { error: uploadError } = await supabasePublic.storage
+    .from('photos')
+    .upload(polaroidPath, polaroidBlob);
+  if (uploadError) {
+    setStatus(`Upload failed: ${uploadError.message}`);
+    return;
+  }
+  const { data: urlData } = supabasePublic.storage.from('photos').getPublicUrl(polaroidPath);
+
+  const res = await fetch(`/api/submissions/${submission.id}/update-caption`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ownerPassword: password, caption: newCaption, polaroidUrl: urlData.publicUrl }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    setStatus(`Error: ${data.error}`);
+    return;
+  }
+  setStatus('Caption updated.');
+  loadPending();
+}
+
   async function closeQr() {
     await fetch(`/api/events/${eventId}/close`, {
       method: 'POST',
@@ -266,8 +305,18 @@ export default function ModeratePage({ params }) {
                   swipeRequirementType="position"
                   swipeThreshold={80}
                 >
-                  <div className="polaroid" style={{ position: 'relative', margin: '0 auto', width: 260 }}>
+                  <div className="mod-swipe-card">
                     <img src={current.polaroid_url} alt={current.caption} draggable="false" />
+                    {current.caption && <p className="mod-swipe-caption">{current.caption}</p>}
+                    <button
+                      className="mod-swipe-edit-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        editCaption(current);
+                      }}
+                    >
+                      ✎ Edit caption
+                    </button>
                   </div>
                 </TinderCard>
               )}
