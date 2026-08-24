@@ -218,7 +218,7 @@ export default function ModeratePage({ params }) {
   }
 
   const submitUrl = typeof window !== 'undefined' ? `${window.location.origin}/event/${eventId}/submit` : '';
-  const current = pending[0];
+  //const current = pending[0];
 
   return (
     <main className="owner-page">
@@ -296,30 +296,49 @@ export default function ModeratePage({ params }) {
 
             <p className="owner-subheading" style={{ textAlign: 'center' }}>Pending</p>
             <div style={{ position: 'relative', height: 420, textAlign: 'center', overflow: 'hidden' }}>
-              {!current && <p className="owner-empty-text">No pending submissions right now.</p>}
-              {current && (
-                <TinderCard
-                  key={current.id}
-                  onSwipe={(dir) => decide(dir, current.id)}
-                  preventSwipe={['up', 'down']}
-                  swipeRequirementType="position"
-                  swipeThreshold={45}
-                >
-                  <div className="mod-swipe-card">
-                    <img src={current.polaroid_url} alt={current.caption} draggable="false" />
-                    {current.caption && <p className="mod-swipe-caption">{current.caption}</p>}
-                    <button
-                      className="mod-swipe-edit-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        editCaption(current);
-                      }}
+              {pending.length === 0 && <p className="owner-empty-text">No pending submissions right now.</p>}
+              {pending.slice(0, 3).reverse().map((sub, i) => {
+                const stackIndex = pending.slice(0, 3).length - 1 - i; // 0 = top card
+                const isTop = stackIndex === 0;
+                return (
+                  <div
+                    key={sub.id}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      transform: isTop ? 'none' : `scale(${1 - stackIndex * 0.04}) translateY(${stackIndex * 10}px)`,
+                      zIndex: 10 - stackIndex,
+                      transition: 'transform 0.2s ease',
+                      pointerEvents: isTop ? 'auto' : 'none',
+                    }}
+                  >
+                    <TinderCard
+                      onSwipe={(dir) => decide(dir, sub.id)}
+                      preventSwipe={['up', 'down']}
+                      swipeRequirementType="position"
+                      swipeThreshold={45}
                     >
-                      ✎ Edit caption
-                    </button>
+                      <div className="mod-swipe-card">
+                        <img src={sub.polaroid_url} alt={sub.caption} draggable="false" />
+                        {sub.caption && <p className="mod-swipe-caption">{sub.caption}</p>}
+                        {isTop && (
+                          <button
+                            className="mod-swipe-edit-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              editCaption(sub);
+                            }}
+                          >
+                            ✎ Edit caption
+                          </button>
+                        )}
+                      </div>
+                    </TinderCard>
                   </div>
-                </TinderCard>
-              )}
+                );
+              })}
             </div>
 
             {current && (
