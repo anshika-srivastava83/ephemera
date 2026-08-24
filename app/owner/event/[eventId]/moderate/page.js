@@ -295,7 +295,7 @@ export default function ModeratePage({ params }) {
             {lastAction === 'rejected' && <div style={{ fontSize: 40, color: 'crimson', textAlign: 'center' }}>✕</div>}
 
             <p className="owner-subheading" style={{ textAlign: 'center' }}>Pending</p>
-            <div style={{ position: 'relative', height: 420, textAlign: 'center' }}>
+            <div style={{ position: 'relative', height: 420, textAlign: 'center', overflow: 'hidden' }}>
               {!current && <p className="owner-empty-text">No pending submissions right now.</p>}
               {current && (
                 <TinderCard
@@ -303,7 +303,7 @@ export default function ModeratePage({ params }) {
                   onSwipe={(dir) => decide(dir, current.id)}
                   preventSwipe={['up', 'down']}
                   swipeRequirementType="position"
-                  swipeThreshold={80}
+                  swipeThreshold={45}
                 >
                   <div className="mod-swipe-card">
                     <img src={current.polaroid_url} alt={current.caption} draggable="false" />

@@ -166,7 +166,6 @@ export default function SubmitPage({ params }) {
               className="guest-input"
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={(e) => setFile(e.target.files[0])}
             />
 
