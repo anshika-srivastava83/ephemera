@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import DownloadButton from '../../../../../components/DownloadButton';
 
 export default function GalleryPage({ params }) {
   const { eventId } = params;
@@ -194,9 +193,13 @@ export default function GalleryPage({ params }) {
                   >
                     ✎ Edit caption
                   </button>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 8 }}>
-                    <DownloadButton href={s.photo_url} filename={`raw-${s.id}.jpg`} label="Raw" variant="owner" />
-                    <DownloadButton href={s.polaroid_url} filename={`polaroid-${s.id}.jpg`} label="Polaroid" variant="owner" />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+                    <a href={s.photo_url} download style={{ fontSize: 12, color: 'var(--owner-accent-dark)' }}>
+                      Download raw
+                    </a>
+                    <a href={s.polaroid_url} download style={{ fontSize: 12, color: 'var(--owner-accent-dark)' }}>
+                      Download polaroid
+                    </a>
                   </div>
                   <button className="owner-button-danger" onClick={() => disposeOne(s.id)} style={{ marginTop: 10, width: '100%' }}>
                     Dispose
