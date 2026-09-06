@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import DownloadButton from '../../../../../components/DownloadButton';
 import { toPng } from 'html-to-image';
 import { supabasePublic } from '../../../../../lib/supabaseClient';
 import { computeWallPositions } from '../../../../../lib/wallLayout';
@@ -158,16 +159,14 @@ export default function FinalizePage({ params }) {
               })}
             </div>
 
-            <button className="owner-button" onClick={exportAndFinalize} style={{ marginTop: 16 }}>
-              Export & save as final wall
-            </button>
+            <div style={{ marginTop: 16 }}>
+              <DownloadButton onSave={exportAndFinalize} label="Save as final wall" savedLabel="Saved!" variant="owner" />
+            </div>
 
             {finalWallUrl && (
               <div style={{ marginTop: 16 }}>
                 <p className="owner-empty-text">Current official final wall:</p>
-                <a href={finalWallUrl} download style={{ fontSize: 14, color: 'var(--owner-accent-dark)' }}>
-                  Download final wall image
-                </a>
+                <DownloadButton href={finalWallUrl} filename="final-wall.png" label="Download" variant="owner" />
               </div>
             )}
           </>

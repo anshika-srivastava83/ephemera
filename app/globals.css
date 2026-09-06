@@ -565,3 +565,94 @@ body {
   text-align: center;
   margin-bottom: 20px;
 }
+
+.mod-spinner-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 12px;
+}
+
+.mod-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid #e5ddf5;
+  border-top-color: var(--owner-accent-dark);
+  animation: mod-spin 0.7s linear infinite;
+}
+
+@keyframes mod-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.download-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 90px;
+  height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.download-btn:active {
+  transform: scale(0.96);
+}
+
+.download-btn:disabled {
+  cursor: default;
+}
+
+.download-btn-owner {
+  background: var(--owner-accent);
+  color: #fff;
+}
+.download-btn-owner:hover:not(:disabled) {
+  background: var(--owner-accent-dark);
+}
+
+.download-btn-guest {
+  background: var(--guest-accent);
+  color: #fff;
+}
+.download-btn-guest:hover:not(:disabled) {
+  background: var(--guest-accent-dark);
+}
+
+.download-btn-spinner {
+  animation: download-btn-spin 0.7s linear infinite;
+}
+.download-btn-spinner-track {
+  stroke: rgba(255, 255, 255, 0.35);
+}
+.download-btn-spinner-arc {
+  stroke: #fff;
+}
+
+@keyframes download-btn-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.download-btn-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  animation: download-btn-pop 0.25s ease;
+}
+
+@keyframes download-btn-pop {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}

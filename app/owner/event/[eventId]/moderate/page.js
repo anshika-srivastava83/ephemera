@@ -85,6 +85,7 @@ export default function ModeratePage({ params }) {
   const [lastSubmissionId, setLastSubmissionId] = useState(null);
   const [canUndo, setCanUndo] = useState(false);
   const [status, setStatus] = useState('');
+  const [autoLoading, setAutoLoading] = useState(!!queryPassword);
   const [showQr, setShowQr] = useState(false);
 
   useEffect(() => {
@@ -102,11 +103,13 @@ export default function ModeratePage({ params }) {
     const data = await res.json();
     if (!res.ok) {
       setStatus(`Error: ${data.error}`);
+      setAutoLoading(false);
       return;
     }
     setPending(data.submissions || []);
     setUnlocked(true);
     setStatus('');
+    setAutoLoading(false);
   }
 
   async function decide(direction, submissionId) {
@@ -218,7 +221,7 @@ export default function ModeratePage({ params }) {
   }
 
   const submitUrl = typeof window !== 'undefined' ? `${window.location.origin}/event/${eventId}/submit` : '';
-  //const current = pending[0];
+  const topPending = pending[0];
 
   return (
     <main className="owner-page">
@@ -271,9 +274,16 @@ export default function ModeratePage({ params }) {
           </div>
         )}
 
-        {!unlocked && <h1 className="owner-heading">Moderate</h1>}
+        {!unlocked && autoLoading && (
+          <div className="mod-spinner-wrap">
+            <div className="mod-spinner" />
+            <p className="owner-empty-text">Loading...</p>
+          </div>
+        )}
 
-        {!unlocked && (
+        {!unlocked && !autoLoading && <h1 className="owner-heading">Moderate</h1>}
+
+        {!unlocked && !autoLoading && (
           <div>
             <input
               type="password"
@@ -341,10 +351,10 @@ export default function ModeratePage({ params }) {
               })}
             </div>
 
-            {current && (
+            {topPending && (
               <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 16 }}>
-                <button className="owner-button-secondary" onClick={() => decide('right', current.id)}>✕ Reject</button>
-                <button className="owner-button" style={{ marginTop: 0 }} onClick={() => decide('left', current.id)}>✓ Approve</button>
+                <button className="owner-button-secondary" onClick={() => decide('right', topPending.id)}>✕ Reject</button>
+                <button className="owner-button" style={{ marginTop: 0 }} onClick={() => decide('left', topPending.id)}>✓ Approve</button>
               </div>
             )}
 
