@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../lib/supabaseClient';
 import { hashPhone } from '../../../lib/hashPhone';
+import { sendGuestLink } from '../../../lib/sendEmail';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // GET /api/submissions?eventId=...&phone=...
 // Used by the submit page to check "have I already submitted?" and show
@@ -21,15 +24,25 @@ export async function GET(request) {
     .eq('phone_hash', phone_hash)
     .maybeSingle();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ existing: data || null });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  let hasEmail = false;
+  if (data) {
+    const { data: contact } = await supabaseAdmin()
+      .from('submission_contacts')
+      .select('submission_id')
+      .eq('submission_id', data.id)
+      .maybeSingle();
+    hasEmail = !!contact;
+  }
+  return NextResponse.json({ existing: data || null, hasEmail });
 }
 
 // POST /api/submissions  { eventId, phone, caption, photoUrl, polaroidUrl, reuseConsent }
 // Creates a new submission, or replaces the existing one for that phone
 // number. Always goes back to 'pending' so it re-enters the moderation queue.
 export async function POST(request) {
-  const { eventId, phone, caption, photoUrl, polaroidUrl, reuseConsent } = await request.json();
+  const { eventId, phone, caption, photoUrl, polaroidUrl, reuseConsent, email } = await request.json();
 
   if (!eventId || !phone || !photoUrl || !polaroidUrl) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -42,7 +55,7 @@ export async function POST(request) {
 
   const { data: event, error: eventError } = await db
     .from('events')
-    .select('status, max_submissions')
+    .select('name, status, max_submissions')
     .eq('id', eventId)
     .single();
   if (eventError) return NextResponse.json({ error: eventError.message }, { status: 500 });
@@ -76,6 +89,20 @@ export async function POST(request) {
     }
   }
 
+    let hasContact = false;
+  if (existingSubmission) {
+    const { data: contact } = await db
+      .from('submission_contacts')
+      .select('submission_id')
+      .eq('submission_id', existingSubmission.id)
+      .maybeSingle();
+    hasContact = !!contact;
+  }
+  const emailOk = typeof email === 'string' && EMAIL_RE.test(email.trim());
+  if (!hasContact && !emailOk) {
+    return NextResponse.json({ error: 'A valid email is required' }, { status: 400 });
+  }
+
   const { data, error } = await db
     .from('submissions')
     .upsert(
@@ -94,6 +121,24 @@ export async function POST(request) {
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ submission: data });
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  let emailSent = false;
+  if (!hasContact && emailOk) {
+    const { data: contact, error: contactError } = await db
+      .from('submission_contacts')
+      .upsert({ submission_id: data.id, email: email.trim() }, { onConflict: 'submission_id' })
+      .select('access_token')
+      .single();
+    if (!contactError && contact) {
+      try {
+        const link = `${new URL(request.url).origin}/event/${eventId}/me?token=${contact.access_token}`;
+        await sendGuestLink({ to: email.trim(), link, eventName: event.name });
+        emailSent = true;
+      } catch (e) {
+        console.error('Email send failed:', e);
+      }
+    }
+  }
+  return NextResponse.json({ submission: data, emailSent });
 }

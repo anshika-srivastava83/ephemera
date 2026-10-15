@@ -50,3 +50,12 @@ create policy "Anyone can read events" on events
 
 create policy "Anyone can read approved submissions" on submissions
   for select using (status = 'approved');
+
+create table submission_contacts (
+  submission_id uuid primary key references submissions(id) on delete cascade,
+  email text not null,
+  access_token uuid not null default uuid_generate_v4() unique,
+  created_at timestamptz not null default now()
+);
+
+alter table submission_contacts enable row level security;

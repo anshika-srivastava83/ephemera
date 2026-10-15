@@ -5,6 +5,9 @@ import { supabasePublic } from '../../../../lib/supabaseClient';
 import { compositePolaroid } from '../../../../lib/compositePolaroid';
 
 const CAPTION_LIMIT = 120;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Flip to true right before deployment
+const REQUIRE_10_DIGITS = false;
 
 export default function SubmitPage({ params }) {
   const { eventId } = params;
@@ -18,14 +21,21 @@ export default function SubmitPage({ params }) {
   const [wrapped, setWrapped] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewBlob, setPreviewBlob] = useState(null);
+  const [email, setEmail] = useState('');
+  const [hasEmail, setHasEmail] = useState(false);
 
   async function checkPhone() {
+    if (REQUIRE_10_DIGITS && phone.replace(/\D/g, '').length !== 10) {
+      setStatus('Please enter a 10-digit phone number.');
+      return;
+    }
     setStatus('Checking...');
     const res = await fetch(
       `/api/submissions?eventId=${eventId}&phone=${encodeURIComponent(phone)}`
     );
     const data = await res.json();
     setExisting(data.existing);
+    setHasEmail(!!data.hasEmail);
     setChecked(true);
     setStatus('');
   }
@@ -51,8 +61,12 @@ export default function SubmitPage({ params }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!file || !previewBlob) {
+        if (!file || !previewBlob) {
       setStatus('Please add a photo.');
+      return;
+    }
+    if (!hasEmail && !EMAIL_RE.test(email.trim())) {
+      setStatus('Please enter a valid email.');
       return;
     }
     setStatus('Uploading photo...');
@@ -86,7 +100,15 @@ export default function SubmitPage({ params }) {
     const res = await fetch('/api/submissions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventId, phone, caption, photoUrl, polaroidUrl, reuseConsent }),
+      body: JSON.stringify({
+        eventId,
+        phone,
+        caption,
+        photoUrl,
+        polaroidUrl,
+        reuseConsent,
+        email: hasEmail ? undefined : email.trim(),
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -97,7 +119,12 @@ export default function SubmitPage({ params }) {
       }
       return;
     }
-    setStatus('Submitted! Your photo will appear once approved.');
+        setHasEmail(true);
+    setStatus(
+      data.emailSent
+        ? 'Submitted! Check your email for a link to your photo and the wall.'
+        : 'Submitted! Your photo will appear once approved.'
+    );
   }
 
   if (wrapped) {
@@ -198,6 +225,21 @@ export default function SubmitPage({ params }) {
               </div>
             )}
 
+            {!hasEmail && (
+              <>
+                <label>Email (we'll send you a link to your photo and the wall)</label>
+                <input
+                  className="guest-input"
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+              </>
+            )}
+
             <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, marginBottom: 20 }}>
               <input
                 type="checkbox"
@@ -208,7 +250,7 @@ export default function SubmitPage({ params }) {
               The organiser may download and reuse my photo
             </label>
 
-            <button className="guest-button" type="submit" disabled={!previewBlob}>
+            <button className="guest-button" type="submit" disabled={!previewBlob || (!hasEmail && !EMAIL_RE.test(email.trim()))}>
               Add to the wall
             </button>
           </form>
