@@ -4,9 +4,16 @@ import { updateSubmissionStatus } from '../../../../../lib/dataService';
 
 export async function POST(request, { params }) {
   try {
-    if (!(await isOwnerOrCollaborator())) {
+    let password;
+    try {
+      const body = await request.json();
+      password = body?.password;
+    } catch {}
+
+    if (!(await isOwnerOrCollaborator(password))) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
     }
+
 
     const submission = await updateSubmissionStatus(params.id, 'rejected');
     return NextResponse.json({ submission, ok: true });

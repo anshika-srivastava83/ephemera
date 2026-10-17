@@ -97,6 +97,17 @@ export default function HostEventWorkspace({ params }) {
               <span className="text-xs uppercase tracking-widest font-semibold text-sepia whitespace-nowrap">
                 Host Workspace
               </span>
+              {role && (
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
+                    role === 'owner'
+                      ? 'bg-sepia/10 text-sepia border-sepia/25'
+                      : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  }`}
+                >
+                  {role === 'owner' ? 'Owner' : 'Collaborator'}
+                </span>
+              )}
             </div>
 
             <h1 className="font-editorial text-4xl sm:text-5xl font-normal text-ink">
@@ -118,13 +129,15 @@ export default function HostEventWorkspace({ params }) {
                 onChange={(status) => setEvent((ev) => ({ ...ev, status }))}
               />
             )}
-            <button
-              onClick={() => setShowQrModal(true)}
-              className="btn-editorial btn-editorial-secondary text-sm px-4 py-2.5"
-            >
-              <Printer className="w-4 h-4 text-sepia" />
-              <span>Table QR Card</span>
-            </button>
+            {role === 'owner' && (
+              <button
+                onClick={() => setShowQrModal(true)}
+                className="btn-editorial btn-editorial-secondary text-sm px-4 py-2.5"
+              >
+                <Printer className="w-4 h-4 text-sepia" />
+                <span>Table QR Card</span>
+              </button>
+            )}
 
             <Link
               href={`/wall/${eventId}`}
@@ -135,6 +148,7 @@ export default function HostEventWorkspace({ params }) {
               <span>Projector Wall</span>
               <ExternalLink className="w-3 h-3 text-ink-faint" />
             </Link>
+
 
             <Link
               href={`/events/${eventId}/moderate`}
@@ -278,7 +292,7 @@ export default function HostEventWorkspace({ params }) {
                 href={`/owner/event/${eventId}/select-style`}
                 className="text-xs font-medium text-sepia hover:underline"
               >
-                Choose a style →
+                {role === 'owner' ? 'Choose a style →' : 'View styles →'}
               </Link>
             </div>
 
@@ -307,23 +321,26 @@ export default function HostEventWorkspace({ params }) {
                 </Link>
               </div>
 
-              <div className="pt-4 border-t border-ink/5 flex items-center justify-between text-xs text-ink-muted">
-                <span>When the night is over:</span>
-                <Link
-                  href={`/events/${eventId}/disposal`}
-                  className="text-rose-dark hover:underline font-medium inline-flex items-center gap-1"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Dispose photographs or delete event</span>
-                </Link>
-              </div>
+              {role === 'owner' && (
+                <div className="pt-4 border-t border-ink/5 flex items-center justify-between text-xs text-ink-muted">
+                  <span>When the night is over:</span>
+                  <Link
+                    href={`/events/${eventId}/disposal`}
+                    className="text-rose-dark hover:underline font-medium inline-flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Dispose photographs or delete event</span>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* QR Code Printable Modal */}
-      {showQrModal && (
+      {/* QR Code Printable Modal (Owner only) */}
+      {role === 'owner' && showQrModal && (
+
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm animate-fade-in"
           role="dialog"

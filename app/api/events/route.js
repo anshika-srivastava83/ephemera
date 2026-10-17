@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
-import { getRole } from '../../../lib/auth';
+import { getRole, isOwner } from '../../../lib/auth';
 import { getEvents, createEvent } from '../../../lib/dataService';
 import { createEventSchema, formatZodErrors } from '../../../lib/validation';
 
 export async function POST(request) {
   try {
-    if ((await getRole()) !== 'owner') {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+    const body = await request.json();
+
+    if (!(await isOwner(body?.password))) {
+      return NextResponse.json(
+        { error: 'Only event owners can create events.' },
+        { status: 403 }
+      );
     }
 
-    const body = await request.json();
 
     // Server-side Zod validation
     const parsed = createEventSchema.safeParse(body);

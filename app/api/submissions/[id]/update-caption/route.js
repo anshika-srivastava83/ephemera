@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isOwnerOrCollaborator } from '../../../../../lib/auth';
+import { isOwner } from '../../../../../lib/auth';
 import { updateSubmissionCaption } from '../../../../../lib/dataService';
 import { captionUpdateSchema, formatZodErrors } from '../../../../../lib/validation';
 
@@ -15,8 +15,11 @@ export async function POST(request, { params }) {
     }
 
     const { caption, polaroidUrl } = result.data;
-    if (!(await isOwnerOrCollaborator())) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+    if (!(await isOwner(body?.password))) {
+      return NextResponse.json(
+        { error: 'Only event owners can edit captions.' },
+        { status: 403 }
+      );
     }
 
     const submission = await updateSubmissionCaption(params.id, caption || '', polaroidUrl);

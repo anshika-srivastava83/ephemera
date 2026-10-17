@@ -37,6 +37,7 @@ const STATUS_STYLE = {
 export default function GalleryPage({ params }) {
   const { eventId } = params;
   const { role, loaded: roleLoaded } = useHostRole();
+  const isOwner = role === 'owner';
   const toast = useToast();
 
   const [submissions, setSubmissions] = useState([]);
@@ -54,6 +55,7 @@ export default function GalleryPage({ params }) {
   const [newCaption, setNewCaption] = useState('');
   const [isUpdatingCaption, setIsUpdatingCaption] = useState(false);
   const [captionError, setCaptionError] = useState('');
+
 
   useEffect(() => {
     loadAll();
@@ -207,23 +209,80 @@ export default function GalleryPage({ params }) {
     }
   }
 
+  // Owner action: Final approve or pass photograph directly from archive
+  async function handleStatusChange(id, newStatus) {
+    if (!isOwner) return;
+    try {
+      const endpoint = newStatus === 'approved' ? 'approve' : newStatus === 'rejected' ? 'reject' : 'pending';
+      const res = await fetch(`/api/submissions/${id}/${endpoint}`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update photograph status.');
+      }
+      setSubmissions((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s))
+      );
+      toast.success(
+        newStatus === 'approved'
+          ? 'Photograph approved to the live wall.'
+          : newStatus === 'rejected'
+          ? 'Photograph passed.'
+          : 'Photograph returned to awaiting queue.'
+      );
+    } catch (err) {
+      toast.error(err.message || 'Status update failed.');
+    }
+  }
+
+  // Owner action: Bulk final approve all selected photographs to live wall
+  async function handleBulkApprove() {
+    if (!isOwner || selected.size === 0) return;
+    const ids = [...selected];
+    let approvedCount = 0;
+    for (const id of ids) {
+      try {
+        const res = await fetch(`/api/submissions/${id}/approve`, { method: 'POST' });
+        if (res.ok) approvedCount++;
+      } catch {}
+    }
+    setSubmissions((prev) =>
+      prev.map((s) => (selected.has(s.id) ? { ...s, status: 'approved' } : s))
+    );
+    setSelected(new Set());
+    toast.success(`${approvedCount} photograph${approvedCount === 1 ? '' : 's'} approved to the wall.`);
+  }
+
   if (roleLoaded && !role) return <AccessDenied />;
 
   const selectedCount = selected.size;
 
   return (
     <div className="min-h-screen flex flex-col selection:bg-sepia selection:text-white">
-      <header className="px-6 py-4 glass-nav flex items-center gap-3 border-b border-ink/10">
-        <Link
-          href={`/events/${eventId}`}
-          className="text-xs uppercase tracking-wider text-ink-muted hover:text-ink font-semibold flex items-center gap-1"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Workspace</span>
-        </Link>
-        <span className="text-xs text-ink-faint">•</span>
-        <span className="font-editorial text-xl text-ink font-normal">Archive</span>
+      <header className="px-6 py-4 glass-nav flex items-center justify-between border-b border-ink/10">
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/events/${eventId}`}
+            className="text-xs uppercase tracking-wider text-ink-muted hover:text-ink font-semibold flex items-center gap-1"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Workspace</span>
+          </Link>
+          <span className="text-xs text-ink-faint">•</span>
+          <span className="font-editorial text-xl text-ink font-normal">Archive</span>
+          {roleLoaded && role && (
+            <span
+              className={`hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
+                isOwner
+                  ? 'bg-sepia/10 text-sepia border-sepia/25'
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              }`}
+            >
+              {isOwner ? 'Owner' : 'Collaborator'}
+            </span>
+          )}
+        </div>
       </header>
+
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8 pb-28">
         <div className="mb-6">
@@ -257,7 +316,7 @@ export default function GalleryPage({ params }) {
             ))}
           </div>
 
-          {visible.length > 0 && (
+          {isOwner && visible.length > 0 && (
             <button
               onClick={toggleSelectVisible}
               className="btn-editorial btn-editorial-secondary text-xs px-3.5 py-1.5"
@@ -321,20 +380,22 @@ export default function GalleryPage({ params }) {
                       className="w-full"
                     />
 
-                    {/* Select */}
-                    <button
-                      type="button"
-                      onClick={() => toggleSelect(sub.id)}
-                      aria-pressed={isSelected}
-                      aria-label={isSelected ? 'Deselect photograph' : 'Select photograph'}
-                      className={`absolute top-2 left-2 z-10 w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
-                        isSelected
-                          ? 'bg-sepia border-sepia text-white scale-100'
-                          : 'bg-white/90 border-ink/25 text-transparent hover:text-ink/40 opacity-90'
-                      }`}
-                    >
-                      <Check className="w-4 h-4" strokeWidth={3} />
-                    </button>
+                    {/* Select (Owner only) */}
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={() => toggleSelect(sub.id)}
+                        aria-pressed={isSelected}
+                        aria-label={isSelected ? 'Deselect photograph' : 'Select photograph'}
+                        className={`absolute top-2 left-2 z-10 w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
+                          isSelected
+                            ? 'bg-sepia border-sepia text-white scale-100'
+                            : 'bg-white/90 border-ink/25 text-transparent hover:text-ink/40 opacity-90'
+                        }`}
+                      >
+                        <Check className="w-4 h-4" strokeWidth={3} />
+                      </button>
+                    )}
 
                     {/* Status */}
                     <span
@@ -346,14 +407,38 @@ export default function GalleryPage({ params }) {
                   </div>
 
                   <div className="flex items-center justify-between pt-2 px-0.5 text-xs">
-                    <button
-                      onClick={() => openCaptionModal(sub)}
-                      className="inline-flex items-center gap-1 text-sepia hover:underline py-1.5 pr-2"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Caption</span>
-                    </button>
+                    {isOwner ? (
+                      <button
+                        onClick={() => openCaptionModal(sub)}
+                        className="inline-flex items-center gap-1 text-sepia hover:underline py-1.5 pr-2"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Caption</span>
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-ink-faint italic py-1.5">View only</span>
+                    )}
                     <div className="flex items-center">
+                      {isOwner && sub.status !== 'approved' && (
+                        <button
+                          onClick={() => handleStatusChange(sub.id, 'approved')}
+                          className="p-2 text-emerald-700 hover:text-emerald-900"
+                          title="Final approve to live wall"
+                          aria-label="Final approve to live wall"
+                        >
+                          <Check className="w-4 h-4" strokeWidth={2.5} />
+                        </button>
+                      )}
+                      {isOwner && sub.status === 'approved' && (
+                        <button
+                          onClick={() => handleStatusChange(sub.id, 'rejected')}
+                          className="p-2 text-ink-muted hover:text-danger"
+                          title="Pass / remove from wall"
+                          aria-label="Pass / remove from wall"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                       <a
                         href={sub.polaroid_url || sub.photo_url}
                         download
@@ -372,14 +457,16 @@ export default function GalleryPage({ params }) {
                       >
                         <ImageDown className="w-4 h-4" />
                       </a>
-                      <button
-                        onClick={() => setDeleteIds([sub.id])}
-                        className="p-2 text-danger hover:text-danger-dark"
-                        title="Delete photograph"
-                        aria-label="Delete photograph"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isOwner && (
+                        <button
+                          onClick={() => setDeleteIds([sub.id])}
+                          className="p-2 text-danger hover:text-danger-dark"
+                          title="Delete photograph"
+                          aria-label="Delete photograph"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </li>
@@ -389,8 +476,8 @@ export default function GalleryPage({ params }) {
         )}
       </main>
 
-      {/* Bulk action bar */}
-      {selectedCount > 0 && (
+      {/* Bulk action bar (Owner only) */}
+      {isOwner && selectedCount > 0 && (
         <div
           role="region"
           aria-label="Selection actions"
@@ -407,6 +494,14 @@ export default function GalleryPage({ params }) {
             <X className="w-4 h-4" />
           </button>
           <button
+            onClick={handleBulkApprove}
+            className="btn-editorial btn-editorial-primary text-xs px-3.5 py-1.5"
+            title="Final approve selected photographs to live wall"
+          >
+            <Check className="w-3.5 h-3.5" />
+            <span>Approve to wall</span>
+          </button>
+          <button
             onClick={() => setDeleteIds([...selected])}
             className="btn-editorial btn-editorial-danger text-xs px-4 py-2"
           >
@@ -416,25 +511,28 @@ export default function GalleryPage({ params }) {
         </div>
       )}
 
-      <ConfirmDialog
-        open={Boolean(deleteIds)}
-        tone="danger"
-        busy={deleting}
-        title={
-          deleteIds?.length === 1
-            ? 'Delete this photograph?'
-            : `Delete ${deleteIds?.length || 0} photographs?`
-        }
-        confirmLabel={deleting ? 'Deleting…' : 'Delete permanently'}
-        onCancel={() => !deleting && setDeleteIds(null)}
-        onConfirm={confirmDelete}
-      >
-        This removes the photograph, its Polaroid, and its caption from the event and deletes the image
-        files from storage. If it is on the wall, it disappears from the wall. This cannot be undone.
-      </ConfirmDialog>
+      {isOwner && (
+        <ConfirmDialog
+          open={Boolean(deleteIds)}
+          tone="danger"
+          busy={deleting}
+          title={
+            deleteIds?.length === 1
+              ? 'Delete this photograph?'
+              : `Delete ${deleteIds?.length || 0} photographs?`
+          }
+          confirmLabel={deleting ? 'Deleting…' : 'Delete permanently'}
+          onCancel={() => !deleting && setDeleteIds(null)}
+          onConfirm={confirmDelete}
+        >
+          This removes the photograph, its Polaroid, and its caption from the event and deletes the image
+          files from storage. If it is on the wall, it disappears from the wall. This cannot be undone.
+        </ConfirmDialog>
+      )}
 
-      {/* Caption edit modal */}
-      {editingSub && (
+      {/* Caption edit modal (Owner only) */}
+      {isOwner && editingSub && (
+
         <div
           className="dialog-backdrop"
           onMouseDown={(e) => e.target === e.currentTarget && !isUpdatingCaption && setEditingSub(null)}

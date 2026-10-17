@@ -84,6 +84,7 @@ function WallPreview({ styleId, items, eventId, width, height, forwardRef }) {
 export default function SelectStylePage({ params }) {
   const { eventId } = params;
   const { role, loaded: roleLoaded } = useHostRole();
+  const isOwner = role === 'owner';
   const toast = useToast();
 
   const [approved, setApproved] = useState([]);
@@ -131,6 +132,10 @@ export default function SelectStylePage({ params }) {
   const usingPlaceholders = approved.length < MIN_PREVIEW_PRINTS;
 
   async function selectStyle(styleId) {
+    if (!isOwner) {
+      toast.error('Only the event owner can change the live wall style.');
+      return;
+    }
     if (styleId === chosenId || savingId) return;
     const previous = chosenId;
     setSavingId(styleId);
@@ -152,6 +157,7 @@ export default function SelectStylePage({ params }) {
       setSavingId(null);
     }
   }
+
 
   async function exportSample(styleId, node) {
     if (!node) return;
@@ -195,6 +201,17 @@ export default function SelectStylePage({ params }) {
           </Link>
           <span className="text-xs text-ink-faint">•</span>
           <span className="font-editorial text-xl text-ink font-normal truncate">Wall style</span>
+          {roleLoaded && role && (
+            <span
+              className={`hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
+                isOwner
+                  ? 'bg-sepia/10 text-sepia border-sepia/25'
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              }`}
+            >
+              {isOwner ? 'Owner' : 'Collaborator'}
+            </span>
+          )}
         </div>
 
         <Link
@@ -216,6 +233,13 @@ export default function SelectStylePage({ params }) {
             {usingPlaceholders && ' Blank prints stand in below until more photographs are approved.'}
           </p>
         </div>
+
+        {roleLoaded && !isOwner && (
+          <div className="mb-6 p-4 rounded-xl border border-ink/10 bg-ivory text-xs text-ink-muted flex items-center justify-between gap-4">
+            <span>You are viewing wall layouts as a collaborator. Only the event owner can apply changes to the live wall.</span>
+            <span className="text-[10px] uppercase font-bold tracking-wider text-ink-faint shrink-0">Read only</span>
+          </div>
+        )}
 
         {loadState === 'loading' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true">
@@ -257,7 +281,7 @@ export default function SelectStylePage({ params }) {
                     type="button"
                     role="radio"
                     aria-checked={isChosen}
-                    onClick={() => selectStyle(style.id)}
+                    onClick={() => (isOwner ? selectStyle(style.id) : setOpenStyle(style.id))}
                     disabled={Boolean(savingId)}
                     className="block w-full text-left disabled:cursor-wait focus-visible:outline-offset-[-3px]"
                   >
@@ -296,7 +320,7 @@ export default function SelectStylePage({ params }) {
 
                   <div className="px-4 pb-4 -mt-1 flex items-center justify-between">
                     <span className="text-xs text-ink-faint">
-                      {isChosen ? 'Selected' : 'Tap card to select'}
+                      {isChosen ? 'Selected' : isOwner ? 'Tap card to select' : 'Preview layout'}
                     </span>
                     <button
                       type="button"
@@ -356,7 +380,7 @@ export default function SelectStylePage({ params }) {
               </ScaleToFit>
             </div>
 
-            <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-2 mt-5">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-2 mt-5">
               <button
                 onClick={() => exportSample(openStyle, largeRef.current)}
                 disabled={exporting}
@@ -365,20 +389,25 @@ export default function SelectStylePage({ params }) {
                 {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 <span>Save sample image</span>
               </button>
-              <button
-                onClick={async () => {
-                  await selectStyle(openStyle);
-                  setOpenStyle(null);
-                }}
-                disabled={Boolean(savingId) || chosenId === openStyle}
-                className="btn-editorial btn-editorial-primary text-sm px-5 py-2.5 disabled:opacity-60"
-              >
-                {chosenId === openStyle ? 'Already the live style' : 'Use this style on the live wall'}
-              </button>
+              {isOwner ? (
+                <button
+                  onClick={async () => {
+                    await selectStyle(openStyle);
+                    setOpenStyle(null);
+                  }}
+                  disabled={Boolean(savingId) || chosenId === openStyle}
+                  className="btn-editorial btn-editorial-primary text-sm px-5 py-2.5 disabled:opacity-60"
+                >
+                  {chosenId === openStyle ? 'Already the live style' : 'Use this style on the live wall'}
+                </button>
+              ) : (
+                <span className="text-xs text-ink-muted italic">Only event owner can apply changes to live wall</span>
+              )}
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }

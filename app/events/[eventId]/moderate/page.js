@@ -13,8 +13,10 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
+  Shield,
 } from 'lucide-react';
 import { compositePolaroid } from '../../../../lib/compositePolaroid';
+import { useHostRole } from '../../../../lib/useHostRole';
 import { AccessDenied } from '../../../../components/brand/AccessDenied';
 import { PolaroidCard } from '../../../../components/polaroid/PolaroidCard';
 import { useToast } from '../../../../components/ui/Toast';
@@ -22,17 +24,20 @@ import { useToast } from '../../../../components/ui/Toast';
 const CAPTION_LIMIT = 120;
 const POLL_MS = 8000;
 
-// Swipe left = approve, swipe right = reject (per the moderation spec).
-const DIRECTION_FOR = { approve: 'left', reject: 'right' };
+// Tinder standard: swipe right = approve, swipe left = pass / reject
+const DIRECTION_FOR = { approve: 'right', reject: 'left' };
 
 export default function ModerationStudio({ params }) {
   const { eventId } = params;
+  const { role, loaded: roleLoaded } = useHostRole();
+  const isOwner = role === 'owner';
   const toast = useToast();
 
   const [pending, setPending] = useState([]);
   const [loadState, setLoadState] = useState('loading'); // 'loading' | 'ready' | 'error' | 'denied'
   const [loadError, setLoadError] = useState('');
   const [reviewedCount, setReviewedCount] = useState(0);
+
 
   // Cards that have been decided but are still animating off screen
   const [decided, setDecided] = useState({});
@@ -215,7 +220,7 @@ export default function ModerationStudio({ params }) {
     }
   }
 
-  // Keyboard: ← approve, → pass, E edit, Z undo. Ignores key-repeat to avoid skipping photos.
+  // Keyboard: ← pass, → approve, E edit (owner only), Z undo. Ignores key-repeat to avoid skipping photos.
   useEffect(() => {
     function onKeyDown(e) {
       if (editingSub || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -224,11 +229,11 @@ export default function ModerationStudio({ params }) {
 
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        swipeTop('approve');
+        swipeTop('reject');
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        swipeTop('reject');
-      } else if (e.key === 'e' || e.key === 'E') {
+        swipeTop('approve');
+      } else if (isOwner && (e.key === 'e' || e.key === 'E')) {
         e.preventDefault();
         openCaptionEditor(topCard);
       } else if (e.key === 'z' || e.key === 'Z') {
@@ -239,9 +244,9 @@ export default function ModerationStudio({ params }) {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topCard, editingSub, lastDecision, undoing]);
+  }, [topCard, editingSub, lastDecision, undoing, isOwner]);
 
-  if (loadState === 'denied') return <AccessDenied />;
+  if (loadState === 'denied' || (roleLoaded && !role)) return <AccessDenied />;
 
   // Cards to render: those leaving the screen plus the top three still in the queue
   const stack = [...pending.filter((s) => decided[s.id]), ...queue.slice(0, 3)];
@@ -262,7 +267,19 @@ export default function ModerationStudio({ params }) {
           </Link>
           <span className="text-xs text-ink-faint">•</span>
           <span className="font-editorial text-xl text-ink font-normal truncate">Moderation studio</span>
+          {roleLoaded && role && (
+            <span
+              className={`hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
+                isOwner
+                  ? 'bg-sepia/10 text-sepia border-sepia/25'
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+              }`}
+            >
+              {isOwner ? 'Owner' : 'Collaborator'}
+            </span>
+          )}
         </div>
+
 
         <div className="flex items-center gap-2 shrink-0">
           <button
@@ -441,14 +458,14 @@ export default function ModerationStudio({ params }) {
                           <div
                             aria-hidden
                             className={`absolute top-6 ${
-                              dragHint === 'left' ? 'right-5 rotate-6' : 'left-5 -rotate-6'
-                            } px-3 py-1 rounded border-4 font-bold uppercase tracking-widest text-lg bg-white/80 ${
-                              dragHint === 'left'
+                              dragHint === 'right' ? 'left-5 -rotate-12' : 'right-5 rotate-12'
+                            } px-3 py-1 rounded border-4 font-bold uppercase tracking-widest text-lg bg-white/90 shadow-md ${
+                              dragHint === 'right'
                                 ? 'text-emerald-700 border-emerald-600'
                                 : 'text-danger border-danger'
                             }`}
                           >
-                            {dragHint === 'left' ? 'Approve' : 'Pass'}
+                            {dragHint === 'right' ? 'Approve' : 'Pass'}
                           </div>
                         )}
                       </div>
@@ -464,7 +481,7 @@ export default function ModerationStudio({ params }) {
                 onClick={() => swipeTop('reject')}
                 disabled={!topCard}
                 className="group flex flex-col items-center gap-1.5 disabled:opacity-40"
-                aria-label="Pass on this photograph (right arrow)"
+                aria-label="Pass on this photograph (left arrow)"
               >
                 <span className="w-16 h-16 rounded-full bg-ivory border-2 border-danger/40 group-hover:border-danger text-danger shadow-sm group-hover:scale-105 group-active:scale-95 transition-all flex items-center justify-center">
                   <X className="w-7 h-7" />
@@ -472,23 +489,25 @@ export default function ModerationStudio({ params }) {
                 <span className="text-xs font-medium text-ink-muted">Pass</span>
               </button>
 
-              <button
-                onClick={() => openCaptionEditor(topCard)}
-                disabled={!topCard}
-                className="group flex flex-col items-center gap-1.5 disabled:opacity-40 pb-0.5"
-                aria-label="Edit caption (E)"
-              >
-                <span className="w-12 h-12 rounded-full bg-ivory border border-ink/20 group-hover:border-sepia text-sepia shadow-sm group-hover:scale-105 group-active:scale-95 transition-all flex items-center justify-center">
-                  <Edit3 className="w-5 h-5" />
-                </span>
-                <span className="text-xs font-medium text-ink-muted">Caption</span>
-              </button>
+              {isOwner && (
+                <button
+                  onClick={() => openCaptionEditor(topCard)}
+                  disabled={!topCard}
+                  className="group flex flex-col items-center gap-1.5 disabled:opacity-40 pb-0.5"
+                  aria-label="Edit caption (E)"
+                >
+                  <span className="w-12 h-12 rounded-full bg-ivory border border-ink/20 group-hover:border-sepia text-sepia shadow-sm group-hover:scale-105 group-active:scale-95 transition-all flex items-center justify-center">
+                    <Edit3 className="w-5 h-5" />
+                  </span>
+                  <span className="text-xs font-medium text-ink-muted">Caption</span>
+                </button>
+              )}
 
               <button
                 onClick={() => swipeTop('approve')}
                 disabled={!topCard}
                 className="group flex flex-col items-center gap-1.5 disabled:opacity-40"
-                aria-label="Approve this photograph (left arrow)"
+                aria-label="Approve this photograph (right arrow)"
               >
                 <span className="w-16 h-16 rounded-full bg-sepia text-white shadow-md group-hover:bg-sepia-dark group-hover:scale-105 group-active:scale-95 transition-all flex items-center justify-center">
                   <Check className="w-7 h-7" />
@@ -498,23 +517,28 @@ export default function ModerationStudio({ params }) {
             </div>
 
             <p className="hidden md:flex items-center gap-3 text-[11px] text-ink-faint mt-7 font-light">
-              <span>← Approve</span>
+              <span>← Pass</span>
               <span>•</span>
-              <span>→ Pass</span>
-              <span>•</span>
-              <span>E Caption</span>
+              <span>→ Approve</span>
+              {isOwner && (
+                <>
+                  <span>•</span>
+                  <span>E Caption</span>
+                </>
+              )}
               <span>•</span>
               <span>Z Undo</span>
             </p>
             <p className="md:hidden text-[11px] text-ink-faint mt-6 font-light">
-              Swipe left to approve, right to pass
+              Swipe right to approve, left to pass
             </p>
           </div>
         )}
       </main>
 
-      {/* Caption editor */}
-      {editingSub && (
+      {/* Caption editor (Owner only) */}
+      {isOwner && editingSub && (
+
         <div
           className="dialog-backdrop"
           onMouseDown={(e) => e.target === e.currentTarget && !isUpdatingCaption && setEditingSub(null)}

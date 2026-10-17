@@ -14,7 +14,10 @@ import {
   Flame,
   Library,
 } from 'lucide-react';
+
+import { useHostRole } from '../../lib/useHostRole';
 import { ToastProvider } from '../ui/Toast';
+
 
 // Pulls the event id out of /events/:id/* or /owner/event/:id/*
 function eventIdFrom(pathname) {
@@ -39,10 +42,12 @@ function NavItem({ href, icon: Icon, label, active }) {
 export function HostShell({ children }) {
   const pathname = usePathname() || '';
   const eventId = eventIdFrom(pathname);
+  const { role, loaded: roleLoaded } = useHostRole();
+  const isOwner = role === 'owner';
 
   const global = [
     { href: '/owner/dashboard', icon: LayoutGrid, label: 'Events' },
-    { href: '/create', icon: PlusCircle, label: 'New event' },
+    ...(isOwner ? [{ href: '/create', icon: PlusCircle, label: 'New event' }] : []),
   ];
   const scoped = eventId
     ? [
@@ -50,13 +55,18 @@ export function HostShell({ children }) {
         { href: `/events/${eventId}/moderate`, icon: Layers, label: 'Moderate' },
         { href: `/owner/event/${eventId}/gallery`, icon: Images, label: 'Gallery' },
         { href: `/owner/event/${eventId}/select-style`, icon: LayoutTemplate, label: 'Wall style' },
-        { href: `/events/${eventId}/tapestry`, icon: Frame, label: 'Finalise' },
-        { href: `/events/${eventId}/disposal`, icon: Flame, label: 'Dispose' },
+        ...(isOwner
+          ? [
+              { href: `/events/${eventId}/tapestry`, icon: Frame, label: 'Finalise' },
+              { href: `/events/${eventId}/disposal`, icon: Flame, label: 'Dispose' },
+            ]
+          : []),
       ]
     : [];
 
   const isActive = (it) =>
     it.exact ? pathname === it.href : pathname === it.href || pathname.startsWith(`${it.href}/`);
+
 
   return (
     <ToastProvider>

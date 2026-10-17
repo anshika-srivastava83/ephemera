@@ -1,11 +1,22 @@
 import { NextResponse } from 'next/server';
-import { isOwnerOrCollaborator } from '../../../../lib/auth';
+import { isOwner } from '../../../../lib/auth';
 import { deleteSubmission } from '../../../../lib/dataService';
 
 export async function DELETE(request, { params }) {
   try {
-    if (!(await isOwnerOrCollaborator())) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+    let password;
+    try {
+      const body = await request.json();
+      password = body?.password;
+    } catch {
+      // no body sent with DELETE
+    }
+
+    if (!(await isOwner(password))) {
+      return NextResponse.json(
+        { error: 'Only event owners can delete photographs.' },
+        { status: 403 }
+      );
     }
 
     const result = await deleteSubmission(params.id);
