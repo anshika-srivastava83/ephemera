@@ -79,9 +79,11 @@ export function HostShell({ children }) {
 
           <div className="host-nav-foot">
             <NavItem href="/" icon={Home} label="Public site" active={false} />
-            <div className="host-user">
-              <UserButton />
-            </div>
+            {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && (
+              <div className="host-user">
+                <UserButton />
+              </div>
+            )}
           </div>
         </aside>
 

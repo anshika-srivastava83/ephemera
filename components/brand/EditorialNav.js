@@ -24,6 +24,8 @@ export function Wordmark({ className = '', light = false }) {
 }
 
 export function EditorialNav({ light = false, event = null }) {
+  const hasClerk = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
+
   return (
     <header
       className={`w-full z-50 transition-colors ${
@@ -59,20 +61,36 @@ export function EditorialNav({ light = false, event = null }) {
             <span className="hidden sm:inline">Create an Event</span>
           </Link>
 
-          <SignedOut>
-            <Link
-              href="/sign-in"
-              className={`text-xs md:text-sm font-medium whitespace-nowrap px-2 sm:px-3 py-1.5 rounded-md transition-colors ${
-                light
-                  ? 'text-ivory/80 hover:text-white hover:bg-white/10'
-                  : 'text-ink-muted hover:text-ink hover:bg-paper-dark/40'
-              }`}
-            >
-              <span className="sm:hidden">Sign in</span><span className="hidden sm:inline">Host Sign In</span>
-            </Link>
-          </SignedOut>
+          {hasClerk ? (
+            <>
+              <SignedOut>
+                <Link
+                  href="/sign-in"
+                  className={`text-xs md:text-sm font-medium whitespace-nowrap px-2 sm:px-3 py-1.5 rounded-md transition-colors ${
+                    light
+                      ? 'text-ivory/80 hover:text-white hover:bg-white/10'
+                      : 'text-ink-muted hover:text-ink hover:bg-paper-dark/40'
+                  }`}
+                >
+                  <span className="sm:hidden">Sign in</span><span className="hidden sm:inline">Host Sign In</span>
+                </Link>
+              </SignedOut>
 
-          <SignedIn>
+              <SignedIn>
+                <Link
+                  href="/owner/dashboard"
+                  className={`text-xs md:text-sm font-medium whitespace-nowrap px-2 sm:px-3 py-1.5 rounded-md transition-colors ${
+                    light
+                      ? 'text-ivory/80 hover:text-white hover:bg-white/10'
+                      : 'text-ink-muted hover:text-ink hover:bg-paper-dark/40'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <UserButton />
+              </SignedIn>
+            </>
+          ) : (
             <Link
               href="/owner/dashboard"
               className={`text-xs md:text-sm font-medium whitespace-nowrap px-2 sm:px-3 py-1.5 rounded-md transition-colors ${
@@ -81,10 +99,9 @@ export function EditorialNav({ light = false, event = null }) {
                   : 'text-ink-muted hover:text-ink hover:bg-paper-dark/40'
               }`}
             >
-              Dashboard
+              Host Access
             </Link>
-            <UserButton />
-          </SignedIn>
+          )}
         </nav>
       </div>
     </header>
