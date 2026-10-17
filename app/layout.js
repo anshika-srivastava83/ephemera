@@ -1,23 +1,35 @@
+import { ClerkProvider } from '@clerk/nextjs';
+import { MotionRoot } from '../components/MotionRoot';
 import './globals.css';
 
 export const metadata = {
-  title: 'Ephemera',
-  description: 'A live, guest-contributed polaroid wall for events.',
-  other: {
-    'color-scheme': 'light',
-    'supported-color-schemes': 'light',
+  title: 'Ephemera — A Living Tapestry of Celebrated Moments',
+  description:
+    'An interactive, communal photography experience for weddings, gatherings, and celebrations. Guests scan a table QR, snap candid Polaroid moments, and build a live projection wall in real time.',
+  keywords: ['polaroid wall', 'wedding photography', 'communal memories', 'live photo wall', 'ephemeral events'],
+  openGraph: {
+    title: 'Ephemera — Some nights deserve to stay together',
+    description: 'Every guest brings a memory. Every memory finds its place.',
+    type: 'website',
   },
 };
 
 export const viewport = {
   colorScheme: 'light',
-  themeColor: '#f3effa',
+  themeColor: '#F5F0E7',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" style={{ colorScheme: 'light' }}>
-      <body>{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className="bg-paper text-ink selection:bg-sepia selection:text-white">
+          <MotionRoot>{children}</MotionRoot>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

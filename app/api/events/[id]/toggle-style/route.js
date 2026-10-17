@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '../../../../../lib/supabaseClient';
 import { isOwner } from '../../../../../lib/auth';
 
-// POST /api/events/[id]/toggle-style  { ownerPassword, styleId }
+// POST /api/events/[id]/toggle-style  { styleId }
 export async function POST(request, { params }) {
-  const { ownerPassword, styleId } = await request.json();
-  if (!isOwner(ownerPassword)) {
+  const { styleId } = await request.json();
+  if (!(await isOwner())) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   }
 

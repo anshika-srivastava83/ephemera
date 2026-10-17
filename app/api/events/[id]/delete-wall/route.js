@@ -1,19 +1,17 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../../../lib/supabaseClient';
 import { isOwner } from '../../../../../lib/auth';
+import { deleteEvent } from '../../../../../lib/dataService';
 
-// Separate owner-only action to delete the final wall image whenever she decides.
 export async function POST(request, { params }) {
-  const { ownerPassword } = await request.json();
-  if (!isOwner(ownerPassword)) {
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+  try {
+    if (!(await isOwner())) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+    }
+
+    const result = await deleteEvent(params.id);
+    return NextResponse.json({ ok: true, deleted: true, files: result.files });
+  } catch (err) {
+    console.error('Error deleting event:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  const { error } = await supabaseAdmin()
-    .from('events')
-    .update({ final_wall_image_url: null })
-    .eq('id', params.id);
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
 }

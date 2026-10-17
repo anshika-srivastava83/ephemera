@@ -1,19 +1,17 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../../../lib/supabaseClient';
-import { isOwnerOrCollaborator } from '../../../../../lib/auth';
+import { getApprovedSubmissions } from '../../../../../lib/dataService';
 
-export async function POST(request, { params }) {
-  const { ownerPassword } = await request.json();
-  if (!isOwnerOrCollaborator(ownerPassword)) {
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+// Public: feeds the live wall and landing preview. Only returns approved
+// photos and non-identifying fields.
+async function handle(_request, { params }) {
+  try {
+    const submissions = await getApprovedSubmissions(params.id);
+    return NextResponse.json({ submissions });
+  } catch (err) {
+    console.error('Error fetching approved submissions:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  const { data, error } = await supabaseAdmin()
-    .from('submissions')
-    .select('id, photo_url, polaroid_url, caption, reuse_consent')
-    .eq('event_id', params.id)
-    .eq('status', 'approved');
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ submissions: data });
 }
+
+export const GET = handle;
+export const POST = handle;
