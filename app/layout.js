@@ -22,9 +22,14 @@ export const viewport = {
   maximumScale: 5,
 };
 
+// Build-time dummy placeholder so static page prerendering succeeds before env vars are added in Vercel.
+const clerkPubKey =
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+  'pk_test_cGxhY2Vob2xkZXIuY2xlcmsuYWNjb3VudHMuZGV2JA';
+
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={clerkPubKey}>
       <html lang="en">
         <body className="bg-paper text-ink selection:bg-sepia selection:text-white">
           <MotionRoot>{children}</MotionRoot>
