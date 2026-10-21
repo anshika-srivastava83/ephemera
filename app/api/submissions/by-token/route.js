@@ -16,10 +16,10 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Submission not found or expired link' }, { status: 404 });
     }
 
-    // Only what the guest page needs: no internal ids or contact data.
-    const { caption, photo_url, polaroid_url, status, created_at, events } = submission;
+    // Return fields needed for keepsake viewing and polaroid editing
+    const { id, event_id, caption, photo_url, polaroid_url, status, created_at, email, events } = submission;
     return NextResponse.json({
-      submission: { caption, photo_url, polaroid_url, status, created_at, events },
+      submission: { id, event_id, caption, photo_url, polaroid_url, status, created_at, email, events },
     });
   } catch (err) {
     console.error('Error fetching submission by token:', err);

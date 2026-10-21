@@ -74,7 +74,7 @@ export default function MyPhotoKeepsakePage({ params }) {
   const StatusIcon = statusInfo.icon;
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-6 selection:bg-sepia selection:text-white">
+    <div className="min-h-[100dvh] flex flex-col justify-between p-4 sm:p-6 pb-[max(20px,env(safe-area-inset-bottom))] pt-[max(12px,env(safe-area-inset-top))] selection:bg-sepia selection:text-white">
       {/* Header */}
       <header className="max-w-md mx-auto w-full flex items-center justify-between pb-6 border-b border-ink/10">
         <Wordmark />
@@ -171,11 +171,11 @@ export default function MyPhotoKeepsakePage({ params }) {
 
                 {sub.events?.status === 'open' ? (
                   <Link
-                    href={`/event/${eventId}/submit`}
-                    className="btn-editorial btn-editorial-secondary w-full py-2.5 text-xs justify-center"
+                    href={`/event/${eventId}/submit?token=${encodeURIComponent(token)}`}
+                    className="btn-editorial btn-editorial-primary w-full py-2.5 text-xs justify-center"
                   >
-                    <RotateCcw className="w-3.5 h-3.5 text-sepia" />
-                    <span>Replace my photograph</span>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Edit Polaroid (Photo & Caption)</span>
                   </Link>
                 ) : (
                   <p className="text-[11px] text-ink-faint font-light pt-1">

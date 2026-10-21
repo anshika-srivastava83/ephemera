@@ -52,7 +52,7 @@ export function InputField({
           placeholder={placeholder}
           disabled={disabled}
           maxLength={maxLength}
-          className={`input-editorial text-sm ${Icon ? 'pl-10' : ''} ${
+          className={`input-editorial text-base sm:text-sm ${Icon ? 'pl-10' : ''} ${
             error
               ? 'border-red-400 focus:border-red-500 focus:ring-red-100'
               : 'border-ink/15 hover:border-ink/30 focus:border-sepia'
