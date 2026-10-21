@@ -13,6 +13,7 @@ import {
   Frame,
   Flame,
   Library,
+  Users,
 } from 'lucide-react';
 
 import { useHostRole } from '../../lib/useHostRole';
@@ -42,7 +43,7 @@ function NavItem({ href, icon: Icon, label, active }) {
 export function HostShell({ children }) {
   const pathname = usePathname() || '';
   const eventId = eventIdFrom(pathname);
-  const { role, loaded: roleLoaded } = useHostRole();
+  const { role, loaded: roleLoaded } = useHostRole(eventId);
   const isOwner = role === 'owner';
 
   const global = [
@@ -55,6 +56,7 @@ export function HostShell({ children }) {
         { href: `/events/${eventId}/moderate`, icon: Layers, label: 'Moderate' },
         { href: `/owner/event/${eventId}/gallery`, icon: Images, label: 'Gallery' },
         { href: `/owner/event/${eventId}/select-style`, icon: LayoutTemplate, label: 'Wall style' },
+        { href: `/events/${eventId}/team`, icon: Users, label: 'Team & Roles' },
         ...(isOwner
           ? [
               { href: `/events/${eventId}/tapestry`, icon: Frame, label: 'Finalise' },

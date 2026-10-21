@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isOwnerOrCollaborator } from '../../../../../lib/auth';
-import { updateSubmissionStatus } from '../../../../../lib/dataService';
+import { updateSubmissionStatus, getEventIdBySubmissionId } from '../../../../../lib/dataService';
 
 export async function POST(request, { params }) {
   try {
@@ -10,7 +10,8 @@ export async function POST(request, { params }) {
       password = body?.password;
     } catch {}
 
-    if (!(await isOwnerOrCollaborator(password))) {
+    const eventId = await getEventIdBySubmissionId(params.id);
+    if (!(await isOwnerOrCollaborator(password, eventId))) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
     }
 

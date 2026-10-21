@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isOwner } from '../../../../../lib/auth';
-import { updateSubmissionCaption } from '../../../../../lib/dataService';
+import { updateSubmissionCaption, getEventIdBySubmissionId } from '../../../../../lib/dataService';
 import { captionUpdateSchema, formatZodErrors } from '../../../../../lib/validation';
 
 export async function POST(request, { params }) {
@@ -15,7 +15,8 @@ export async function POST(request, { params }) {
     }
 
     const { caption, polaroidUrl } = result.data;
-    if (!(await isOwner(body?.password))) {
+    const eventId = await getEventIdBySubmissionId(params.id);
+    if (!(await isOwner(body?.password, eventId))) {
       return NextResponse.json(
         { error: 'Only event owners can edit captions.' },
         { status: 403 }

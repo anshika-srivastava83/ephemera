@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isOwner } from '../../../../lib/auth';
-import { deleteSubmission } from '../../../../lib/dataService';
+import { deleteSubmission, getEventIdBySubmissionId } from '../../../../lib/dataService';
 
 export async function DELETE(request, { params }) {
   try {
@@ -12,7 +12,8 @@ export async function DELETE(request, { params }) {
       // no body sent with DELETE
     }
 
-    if (!(await isOwner(password))) {
+    const eventId = await getEventIdBySubmissionId(params.id);
+    if (!(await isOwner(password, eventId))) {
       return NextResponse.json(
         { error: 'Only event owners can delete photographs.' },
         { status: 403 }

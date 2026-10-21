@@ -23,10 +23,14 @@ import {
   Image as ImageIcon,
   Copy,
   Check,
+  Users,
+  UserPlus,
+  X,
 } from 'lucide-react';
 import { PolaroidCard } from '../../../components/polaroid/PolaroidCard';
 import { AccessDenied } from '../../../components/brand/AccessDenied';
 import { SubmissionsToggle } from '../../../components/host/SubmissionsToggle';
+import { TeamManager } from '../../../components/host/TeamManager';
 
 export default function HostEventWorkspace({ params }) {
   const { eventId } = params;
@@ -37,6 +41,9 @@ export default function HostEventWorkspace({ params }) {
   const [approved, setApproved] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [teamCount, setTeamCount] = useState(0);
   const [copiedLink, setCopiedLink] = useState(false);
   const [actionStatus, setActionStatus] = useState('');
 
@@ -48,8 +55,8 @@ export default function HostEventWorkspace({ params }) {
   async function loadWorkspace() {
     setLoading(true);
     try {
-      // 1. Load event meta
-      const res = await fetch(`/api/events`);
+      // 1. Load event meta & role for this specific event
+      const res = await fetch(`/api/events?eventId=${encodeURIComponent(eventId)}`);
       const data = await res.json();
       const current = data.events?.find((e) => e.id === eventId);
       if (current) {
@@ -74,6 +81,18 @@ export default function HostEventWorkspace({ params }) {
       });
       const appData = await appRes.json();
       setApproved(appData.submissions || []);
+
+      // 4. Load event team
+      try {
+        const teamRes = await fetch(`/api/events/${eventId}/collaborators`);
+        const teamData = await teamRes.json();
+        if (teamRes.ok && teamData.members) {
+          setTeamMembers(teamData.members);
+          setTeamCount(teamData.members.length);
+        }
+      } catch (err) {
+        console.warn('Could not load team count:', err);
+      }
     } catch (e) {
       console.error('Failed to load workspace:', e);
     } finally {
@@ -139,6 +158,19 @@ export default function HostEventWorkspace({ params }) {
               </button>
             )}
 
+            <button
+              onClick={() => setShowTeamModal(true)}
+              className="btn-editorial btn-editorial-secondary text-sm px-4 py-2.5"
+            >
+              <Users className="w-4 h-4 text-sepia" />
+              <span>Team & Roles</span>
+              {teamCount > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-sepia/10 text-sepia text-[11px] font-semibold">
+                  {teamCount}
+                </span>
+              )}
+            </button>
+
             <Link
               href={`/wall/${eventId}`}
               target="_blank"
@@ -148,7 +180,6 @@ export default function HostEventWorkspace({ params }) {
               <span>Projector Wall</span>
               <ExternalLink className="w-3 h-3 text-ink-faint" />
             </Link>
-
 
             <Link
               href={`/events/${eventId}/moderate`}
@@ -166,7 +197,7 @@ export default function HostEventWorkspace({ params }) {
         </div>
 
         {/* Operational Overview Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 my-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 my-8">
           <Link
             href={`/events/${eventId}/moderate`}
             className="p-6 rounded-2xl bg-ivory border border-ink/10 shadow-sm hover:border-sepia/40 transition-all group flex items-center justify-between"
@@ -206,6 +237,27 @@ export default function HostEventWorkspace({ params }) {
               <CheckCircle2 className="w-6 h-6" />
             </div>
           </Link>
+
+          <button
+            type="button"
+            onClick={() => setShowTeamModal(true)}
+            className="p-6 rounded-2xl bg-ivory border border-ink/10 shadow-sm hover:border-sepia/40 transition-all text-left flex items-center justify-between group"
+          >
+            <div>
+              <span className="text-xs uppercase font-medium tracking-wider text-ink-faint block mb-1">
+                Event Team
+              </span>
+              <span className="font-editorial text-4xl text-ink font-normal block">
+                {teamCount}
+              </span>
+              <span className="text-xs text-sepia mt-1 inline-flex items-center gap-1 group-hover:underline">
+                {role === 'owner' ? 'Assign hosts & moderators' : 'View team roster'} <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-sepia/10 text-sepia flex items-center justify-center group-hover:bg-sepia group-hover:text-white transition-colors">
+              <Users className="w-6 h-6" />
+            </div>
+          </button>
 
           <Link
             href={`/events/${eventId}/tapestry`}
@@ -335,12 +387,80 @@ export default function HostEventWorkspace({ params }) {
               )}
             </div>
           </div>
+
+          {/* Team & Access Card */}
+          <div className="bg-ivory border border-ink/10 rounded-2xl p-6 shadow-sm col-span-1 md:col-span-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-ink/5 gap-3 mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-editorial text-2xl text-ink font-normal">
+                    Event Hosts & Collaborators
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-sepia/10 text-sepia border border-sepia/25">
+                    {teamCount} assigned
+                  </span>
+                </div>
+                <p className="text-xs text-ink-muted font-light">
+                  Assign co-hosts for full administrative control and collaborators for live guest photo moderation.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowTeamModal(true)}
+                  className="btn-editorial btn-editorial-primary text-xs px-3.5 py-2"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>{role === 'owner' ? 'Assign Member' : 'View Roster'}</span>
+                </button>
+                <Link
+                  href={`/events/${eventId}/team`}
+                  className="btn-editorial btn-editorial-secondary text-xs px-3.5 py-2"
+                >
+                  <span>Team Console →</span>
+                </Link>
+              </div>
+            </div>
+
+            {teamMembers.length === 0 ? (
+              <div className="py-8 text-center text-ink-faint font-light">
+                <Users className="w-8 h-8 mx-auto text-sepia/50 mb-2" />
+                <p>No team members assigned yet.</p>
+                <p className="text-xs mt-1">Assign co-hosts or moderators above so they can assist during the celebration.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {teamMembers.slice(0, 6).map((m) => (
+                  <div
+                    key={m.id}
+                    className="p-3 rounded-xl bg-paper-light border border-ink/5 flex items-center justify-between gap-2"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold uppercase shrink-0 ${
+                        m.role === 'host' ? 'bg-sepia/15 text-sepia border border-sepia/30' : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      }`}>
+                        {m.email.slice(0, 2)}
+                      </div>
+                      <span className="text-xs font-mono text-ink truncate font-medium">
+                        {m.email}
+                      </span>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider shrink-0 border ${
+                      m.role === 'host' ? 'bg-sepia/10 text-sepia border-sepia/25' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    }`}>
+                      {m.role === 'host' ? 'Host' : 'Collab'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
       {/* QR Code Printable Modal (Owner only) */}
       {role === 'owner' && showQrModal && (
-
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm animate-fade-in"
           role="dialog"
@@ -408,6 +528,49 @@ export default function HostEventWorkspace({ params }) {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Team Management Modal */}
+      {showTeamModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm animate-fade-in overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="team-modal-heading"
+          onClick={() => setShowTeamModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-ivory border border-ink/10 rounded-2xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto"
+          >
+            <button
+              onClick={() => setShowTeamModal(false)}
+              className="absolute top-5 right-5 text-ink-muted hover:text-ink text-sm p-1.5 rounded-full hover:bg-ink/5 transition-colors"
+              aria-label="Close dialog"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="mb-6 pb-4 border-b border-ink/10 pr-8">
+              <span className="text-xs uppercase tracking-widest text-sepia font-semibold block mb-1">
+                Event Permissions
+              </span>
+              <h2 id="team-modal-heading" className="font-editorial text-3xl text-ink font-normal">
+                Hosts & Collaborators
+              </h2>
+              <p className="text-xs text-ink-muted font-light mt-1">
+                Assign multiple hosts with complete administrative ownership or collaborators for live swipe moderation.
+              </p>
+            </div>
+
+            <TeamManager
+              eventId={eventId}
+              eventName={event?.name}
+              compact
+              onMemberCountChange={(newCount) => setTeamCount(newCount)}
+            />
           </div>
         </div>
       )}

@@ -4,7 +4,7 @@ import { getPendingSubmissions } from '../../../../../lib/dataService';
 
 export async function POST(request, { params }) {
   try {
-    if (!(await isOwnerOrCollaborator())) {
+    if (!(await isOwnerOrCollaborator(undefined, params.id))) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
     }
 

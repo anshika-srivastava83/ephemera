@@ -6,7 +6,7 @@ export async function POST(request, { params }) {
   try {
     const body = await request.json();
     const { chosenLayoutId, password } = body;
-    if (!(await isOwner(password))) {
+    if (!(await isOwner(password, params.id))) {
       return NextResponse.json(
         { error: 'Only event owners can change the wall style.' },
         { status: 403 }

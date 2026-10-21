@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getRole, isOwner } from '../../../lib/auth';
+import { getRole, isOwner, getCurrentUserEmail } from '../../../lib/auth';
 import { getEvents, createEvent } from '../../../lib/dataService';
 import { createEventSchema, formatZodErrors } from '../../../lib/validation';
 
@@ -14,7 +14,6 @@ export async function POST(request) {
       );
     }
 
-
     // Server-side Zod validation
     const parsed = createEventSchema.safeParse(body);
     if (!parsed.success) {
@@ -28,12 +27,14 @@ export async function POST(request) {
     }
 
     const { name, maxSubmissions, location, scheduledAt } = parsed.data;
+    const creatorEmail = await getCurrentUserEmail();
 
     const event = await createEvent({
       name,
       location,
       scheduledAt,
       maxSubmissions,
+      creatorEmail,
     });
 
     return NextResponse.json({ event, success: true });
@@ -43,9 +44,11 @@ export async function POST(request) {
   }
 }
 
-export async function GET() {
+export async function GET(request) {
   try {
-    const role = await getRole();
+    const url = new URL(request.url);
+    const eventId = url.searchParams.get('eventId') || undefined;
+    const role = await getRole(eventId);
     const events = await getEvents(role);
 
     if (!role) {

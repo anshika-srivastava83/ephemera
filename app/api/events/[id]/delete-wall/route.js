@@ -4,7 +4,7 @@ import { deleteEvent } from '../../../../../lib/dataService';
 
 export async function POST(request, { params }) {
   try {
-    if (!(await isOwner())) {
+    if (!(await isOwner(undefined, params.id))) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
     }
 

@@ -10,7 +10,7 @@ export async function POST(request, { params }) {
       password = body?.password;
     } catch {}
 
-    if (!(await isOwner(password))) {
+    if (!(await isOwner(password, params.id))) {
       return NextResponse.json(
         { error: 'Only event owners can close events.' },
         { status: 403 }
