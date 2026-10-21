@@ -9,6 +9,7 @@
  *   npm run db:migrate
  */
 
+//dummy
 const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
