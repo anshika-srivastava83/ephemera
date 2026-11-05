@@ -41,10 +41,10 @@ export default function EventsListPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-8 border-b border-ink/10 gap-4">
           <div>
             <span className="text-xs uppercase font-medium tracking-widest text-sepia">
-              Archive Directory
+              All events
             </span>
             <h1 className="font-editorial text-4xl sm:text-5xl font-normal text-ink mt-1">
-              Events & Gatherings
+              Events
             </h1>
           </div>
           <Link
@@ -78,7 +78,7 @@ export default function EventsListPage() {
 
               {live.length === 0 ? (
                 <div className="p-8 rounded-2xl bg-ivory border border-ink/10 text-center text-ink-muted text-xs">
-                  No active events right now. Create one to begin capturing memories!
+                  No events yet. Create one to get started!
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -158,18 +158,18 @@ export default function EventsListPage() {
                       className="p-5 rounded-2xl bg-paper-light border border-ink/10 opacity-80 hover:opacity-100 transition-opacity"
                     >
                       <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-rose/20 text-rose-dark mb-2 inline-block">
-                        Ritual Completed
+                        Finished
                       </span>
                       <h3 className="font-editorial text-xl text-ink">{ev.name}</h3>
                       <p className="text-xs text-ink-muted mt-1 font-light">
                         {ev.location ? `${ev.location} • ` : ''}
-                        Preserved into Archival Tapestry
+                        Final collage saved
                       </p>
                       <Link
                         href={`/events/${ev.id}/tapestry`}
                         className="text-xs text-sepia hover:underline inline-flex items-center gap-1 mt-3"
                       >
-                        <span>View Master Tapestry</span>
+                        <span>View final collage</span>
                         <ArrowRight className="w-3 h-3" />
                       </Link>
                     </div>

@@ -57,7 +57,7 @@ export default function EventTeamPage({ params }) {
               </h1>
               <p className="text-sm text-ink-muted font-light mt-1 max-w-xl">
                 {event?.name ? (
-                  <>Managing the celebration team for <strong className="font-medium text-ink">{event.name}</strong>.</>
+                  <>Managing the team for <strong className="font-medium text-ink">{event.name}</strong>.</>
                 ) : (
                   'Assign co-hosts for full administrative control and collaborators for live moderation.'
                 )}

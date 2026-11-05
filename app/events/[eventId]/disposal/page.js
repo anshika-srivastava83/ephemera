@@ -98,7 +98,7 @@ export default function DisposalPage({ params }) {
       setResult({ kind, incomplete, count: data.submissions, note });
       setDialog(null);
       if (incomplete) toast.error('Finished with problems — see the details below.');
-      else toast.success(kind === 'dispose' ? 'Photographs disposed.' : 'Event deleted.');
+      else toast.success(kind === 'dispose' ? 'Photos deleted.' : 'Event deleted.');
       if (kind === 'dispose') {
         setEvent((ev) => (ev ? { ...ev, approvedCount: 0, pendingCount: 0, rejectedCount: 0 } : ev));
       }
@@ -144,7 +144,7 @@ export default function DisposalPage({ params }) {
               {event.name}
             </h1>
             <p className="text-sm text-ink-muted font-light mb-8 max-w-xl">
-              Two different actions live here. Disposing photographs keeps your finished wall.
+              Two different actions are here. Deleting guest photos keeps your final collage.
               Deleting the event removes everything, including the wall.
             </p>
 
@@ -169,8 +169,8 @@ export default function DisposalPage({ params }) {
                     <p className="font-semibold">
                       {result.kind === 'dispose'
                         ? result.incomplete
-                          ? 'Photographs removed from the event, but some files remain.'
-                          : 'Photographs disposed.'
+                          ? 'Photos removed, but some files could not be deleted.'
+                          : 'Photos deleted.'
                         : result.incomplete
                         ? 'Event deleted, but some files remain.'
                         : 'Event deleted.'}
@@ -201,20 +201,20 @@ export default function DisposalPage({ params }) {
 
             {!isOwner && (
               <div className="mb-8 p-4 rounded-xl bg-paper-dark/60 border border-ink/10 text-xs text-ink-muted">
-                Only the event owner can dispose of photographs or delete the event. Collaborators can view
+                Only the event owner can delete photos or the event. Collaborators can view
                 this page but not run these actions.
               </div>
             )}
 
             {result?.kind !== 'delete' && (
               <div className="space-y-6">
-                {/* Dispose photographs */}
+                {/* Delete photos */}
                 <section className="bg-ivory border border-ink/10 rounded-2xl p-6 sm:p-8 shadow-sm">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="w-10 h-10 rounded-full bg-sepia/10 text-sepia flex items-center justify-center">
                       <Flame className="w-5 h-5" />
                     </span>
-                    <h2 className="font-editorial text-3xl font-normal text-ink">Dispose of photographs</h2>
+                    <h2 className="font-editorial text-3xl font-normal text-ink">Delete all guest photos</h2>
                   </div>
                   <p className="text-sm text-ink-muted font-light leading-relaxed mb-5">
                     Removes every guest photograph, caption, and guest contact record for this event — the
@@ -258,7 +258,7 @@ export default function DisposalPage({ params }) {
                     className="btn-editorial btn-editorial-danger px-5 py-3 text-sm disabled:opacity-45 disabled:cursor-not-allowed"
                   >
                     <Trash2 className="w-4 h-4" />
-                    <span>Dispose of photographs…</span>
+                    <span>Delete all guest photos…</span>
                   </button>
                 </section>
 
@@ -307,8 +307,8 @@ export default function DisposalPage({ params }) {
         tone="danger"
         busy={busy}
         confirmDisabled={!phraseOk}
-        title={dialog === 'delete' ? 'Delete this event?' : 'Dispose of all photographs?'}
-        confirmLabel={busy ? 'Working…' : dialog === 'delete' ? 'Delete event' : 'Dispose photographs'}
+        title={dialog === 'delete' ? 'Delete this event?' : 'Delete all guest photos?'}
+        confirmLabel={busy ? 'Working…' : dialog === 'delete' ? 'Delete event' : 'Delete photos'}
         onCancel={closeDialog}
         onConfirm={() => phraseOk && run()}
       >

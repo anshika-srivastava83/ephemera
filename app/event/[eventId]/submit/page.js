@@ -1,5 +1,7 @@
 'use client';
 
+import { uploadImage } from '../../../../lib/clientUpload';
+
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -105,15 +107,17 @@ export default function GuestSubmitPage({ params }) {
     if (!file) return;
 
     setGeneralError('');
-    // 1. MIME type validation
-    if (!file.type || !file.type.startsWith('image/')) {
-      setGeneralError('Please select a photographic image file (JPEG, PNG, HEIC).');
+    // 1. Photographic file validation (check MIME type or extension for mobile camera roll compatibility)
+    const isImageMime = file.type && file.type.startsWith('image/');
+    const isImageExt = /\.(jpe?g|png|webp|heic|heif|avif|gif)$/i.test(file.name || '');
+    if (!isImageMime && !isImageExt) {
+      setGeneralError('Please choose a photo (JPEG, PNG or HEIC).');
       return;
     }
 
     // 2. File size validation
     if (file.size > MAX_FILE_SIZE) {
-      setGeneralError('Photograph is too large. Please choose an image under 15MB.');
+      setGeneralError('This photo is too large. Please choose one under 15MB.');
       return;
     }
 
@@ -186,17 +190,7 @@ export default function GuestSubmitPage({ params }) {
 
   // Upload helper
   async function uploadImageFile(fileOrBlob, filename) {
-    const formData = new FormData();
-    formData.append('file', fileOrBlob, filename);
-    formData.append('folder', eventId);
-
-    const res = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Upload failed');
-    return data.url;
+    return uploadImage(fileOrBlob, filename, eventId);
   }
 
   // Final submission / update with email and Polaroid composite
@@ -206,18 +200,18 @@ export default function GuestSubmitPage({ params }) {
 
     const source = selectedFile || rawPreviewUrl;
     if (!source) {
-      setGeneralError('Please select or capture a photograph first.');
+      setGeneralError('Please take or choose a photo first.');
       return;
     }
 
     if (!email || !emailRegex.test(email.trim())) {
-      setGeneralError('A valid email address is required to receive your keepsake.');
+      setGeneralError('Please enter a valid email so we can send you your photo.');
       setStep('email');
       return;
     }
 
     setIsSubmitting(true);
-    setProgress({ pct: 10, label: existing ? 'Updating your memory…' : 'Sending your photograph…' });
+    setProgress({ pct: 10, label: existing ? 'Updating your photo…' : 'Sending your photo…' });
 
     try {
       // 1. Upload raw photo if a new file was chosen, otherwise keep existing photo_url
@@ -225,14 +219,29 @@ export default function GuestSubmitPage({ params }) {
       if (selectedFile) {
         photoUrl = await uploadImageFile(selectedFile, selectedFile.name || 'guest-photo.jpg');
       }
-      setProgress({ pct: 50, label: 'Developing your Polaroid…' });
+      setProgress({ pct: 50, label: 'Making your Polaroid…' });
 
       // 2. Upload composited Polaroid
       let polaroidUrl = existing?.polaroid_url || '';
-      if (compositedBlob) {
-        polaroidUrl = await uploadImageFile(compositedBlob, `polaroid-${Date.now()}.jpg`);
+      let blobToUpload = compositedBlob;
+
+      // If compositedBlob is not yet generated, compose it on-demand right now
+      if (!blobToUpload && source) {
+        try {
+          blobToUpload = await compositePolaroid(source, caption);
+          setCompositedBlob(blobToUpload);
+        } catch (compErr) {
+          console.warn('On-demand polaroid compositing error:', compErr);
+        }
       }
-      setProgress({ pct: 85, label: 'Placing it on the living wall…' });
+
+      if (blobToUpload) {
+        polaroidUrl = await uploadImageFile(blobToUpload, `polaroid-${Date.now()}.jpg`);
+      } else if (!polaroidUrl && photoUrl) {
+        // Fallback to photographic upload URL if compositing is unavailable
+        polaroidUrl = photoUrl;
+      }
+      setProgress({ pct: 85, label: 'Putting it on the wall…' });
 
       // 3. Save submission record
       const res = await fetch('/api/submissions', {
@@ -277,7 +286,7 @@ export default function GuestSubmitPage({ params }) {
       const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
       setGeneralError(
         offline || err instanceof TypeError
-          ? 'We lost connection. Your photo and note are preserved — tap to try again.'
+          ? 'Internet dropped. Your photo and note are safe. Tap to try again.'
           : err.message || 'Submission failed.'
       );
     } finally {
@@ -296,6 +305,9 @@ export default function GuestSubmitPage({ params }) {
         capture="environment"
         ref={cameraInputRef}
         className="hidden"
+        onClick={(e) => {
+          e.target.value = '';
+        }}
         onChange={(e) => handleFileSelected(e.target.files?.[0])}
       />
       <input
@@ -303,6 +315,9 @@ export default function GuestSubmitPage({ params }) {
         accept="image/*"
         ref={fileInputRef}
         className="hidden"
+        onClick={(e) => {
+          e.target.value = '';
+        }}
         onChange={(e) => handleFileSelected(e.target.files?.[0])}
       />
 
@@ -336,11 +351,11 @@ export default function GuestSubmitPage({ params }) {
           {blocked && (
             <div className="bg-ivory border border-ink/10 rounded-2xl p-6 sm:p-8 shadow-sm text-center">
               <h1 className="font-editorial text-4xl font-normal text-ink mb-3">
-                {blocked === 'closed' ? 'The table is closed.' : "We couldn't find this event."}
+                {blocked === 'closed' ? 'Photo upload is closed.' : "We couldn't find this event."}
               </h1>
               <p className="text-sm text-ink-muted font-light leading-relaxed mb-6">
                 {blocked === 'closed'
-                  ? 'This event is no longer accepting photographs. You can still watch the living wall.'
+                  ? 'This event is not taking photos anymore. You can still watch the live wall.'
                   : 'The link may be mistyped, or the event may have been removed. Check the QR code and try again.'}
               </p>
               {blocked === 'closed' && (
@@ -376,19 +391,19 @@ export default function GuestSubmitPage({ params }) {
                     </p>
                   )}
                   <h1 className="font-editorial text-4xl sm:text-5xl font-normal text-ink mb-3 leading-tight">
-                    You're part of tonight's story.
+                    Aap bhi is mehfil ka hissa hain!
                   </h1>
 
                   <p className="text-ink-muted text-xs sm:text-sm font-light leading-relaxed mb-8">
-                    Snap an honest candid moment and inscribe a handwritten note. Your photograph will
-                    float onto the live wall across the room.
+                    Click a photo, write a short caption, and it will show up on the big screen
+                    at the venue, live.
                   </p>
 
                   <button
                     onClick={() => setStep('email')}
                     className="btn-editorial btn-editorial-primary w-full py-4 text-base shadow-sm justify-center"
                   >
-                    <span>Capture or Edit a Moment</span>
+                    <span>Click a Photo</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </motion.div>
@@ -417,11 +432,11 @@ export default function GuestSubmitPage({ params }) {
                   </div>
 
                   <h2 className="font-editorial text-3xl font-normal text-ink mb-2">
-                    Your Keepsake Email
+                    Your email
                   </h2>
                   <p className="text-xs text-ink-muted font-light leading-relaxed mb-6">
-                    Enter your email to receive your Polaroid and a link to the complete celebration wall.
-                    You can edit or replace your photo anytime while the event is open.
+                    We'll email you your Polaroid and the link to the full photo wall.
+                    You can change your photo anytime while the event is open.
                   </p>
 
                   <div className="space-y-4">
@@ -469,7 +484,7 @@ export default function GuestSubmitPage({ params }) {
                 >
                   <div className="flex items-center justify-between mb-3 text-left">
                     <span className="text-xs uppercase tracking-wider font-semibold text-sepia">
-                      Memory Found
+                      Found your photo
                     </span>
                     <button
                       onClick={() => setStep('email')}
@@ -481,11 +496,11 @@ export default function GuestSubmitPage({ params }) {
                   </div>
 
                   <h2 className="font-editorial text-3xl font-normal text-ink mb-2">
-                    Your Polaroid on the Wall
+                    Your photo on the wall
                   </h2>
                   <p className="text-xs text-ink-muted font-light mb-6">
-                    You already have a moment submitted. Would you like to edit your handwritten note,
-                    change your photo, or view it live?
+                    You've already sent a photo. Want to change the caption,
+                    replace the photo, or watch it live?
                   </p>
 
                   {/* Existing Polaroid Display */}
@@ -520,7 +535,7 @@ export default function GuestSubmitPage({ params }) {
                       <span>
                         {existing.status === 'approved'
                           ? 'Approved & on the live wall'
-                          : 'Awaiting host curation'}
+                          : 'Waiting for host approval'}
                       </span>
                     </span>
                   </div>
@@ -564,7 +579,7 @@ export default function GuestSubmitPage({ params }) {
                         className="text-xs text-sepia font-medium hover:underline inline-flex items-center gap-1.5"
                       >
                         <Eye className="w-3.5 h-3.5" />
-                        <span>Watch Live Living Wall</span>
+                        <span>Watch the Live Wall</span>
                       </Link>
                     </div>
                   </div>
@@ -594,10 +609,10 @@ export default function GuestSubmitPage({ params }) {
                   </div>
 
                   <h2 className="font-editorial text-3xl font-normal text-ink mb-2">
-                    Take Your Shot
+                    Click your photo
                   </h2>
                   <p className="text-xs text-ink-muted font-light mb-8">
-                    Capture spontaneous laughter, toasts, or quiet glances.
+                    Dance, hasi-mazaak, family photos. Anything goes!
                   </p>
 
                   <div className="space-y-4">
@@ -606,7 +621,7 @@ export default function GuestSubmitPage({ params }) {
                       className="btn-editorial btn-editorial-primary w-full py-4 text-base shadow-sm justify-center"
                     >
                       <Camera className="w-5 h-5 text-sepia-light" />
-                      <span>Open Instant Camera</span>
+                      <span>Open Camera</span>
                     </button>
 
                     <button
@@ -614,7 +629,7 @@ export default function GuestSubmitPage({ params }) {
                       className="btn-editorial btn-editorial-secondary w-full py-3.5 text-sm justify-center"
                     >
                       <Upload className="w-4 h-4 text-ink-muted" />
-                      <span>Choose from Photo Roll</span>
+                      <span>Choose from Gallery</span>
                     </button>
                   </div>
                 </motion.div>
@@ -631,7 +646,7 @@ export default function GuestSubmitPage({ params }) {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-xs uppercase tracking-wider font-semibold text-sepia">
-                      {existing ? 'Edit Your Polaroid' : 'The Polaroid Inscription'}
+                      {existing ? 'Edit Your Polaroid' : 'Add a caption'}
                     </span>
                     <button
                       onClick={() => {
@@ -703,7 +718,7 @@ export default function GuestSubmitPage({ params }) {
                           htmlFor="caption-input"
                           className="text-xs uppercase tracking-wider font-semibold text-ink/80"
                         >
-                          Handwritten Note
+                          Caption
                         </label>
                         <span className="text-xs text-ink-faint">
                           {caption.length}/{CAPTION_LIMIT}
@@ -714,7 +729,7 @@ export default function GuestSubmitPage({ params }) {
                         value={caption}
                         maxLength={CAPTION_LIMIT}
                         onChange={(e) => setCaption(e.target.value)}
-                        placeholder="e.g. the night we finally got everyone together..."
+                        placeholder="e.g. poori family ek frame mein!"
                         rows={2}
                         className="input-editorial font-caption text-2xl resize-none py-2"
                       />
@@ -740,8 +755,8 @@ export default function GuestSubmitPage({ params }) {
                       <CustomCheckbox
                         checked={reuseConsent}
                         onChange={setReuseConsent}
-                        label="Include in the Master Tapestry"
-                        sublabel="Allow the host to incorporate your photo into the final celebration artwork."
+                        label="Include in the final collage"
+                        sublabel="Let the host use your photo in the album collage made at the end."
                       />
                     </div>
 
@@ -751,14 +766,14 @@ export default function GuestSubmitPage({ params }) {
                       className="btn-editorial btn-editorial-primary w-full py-4 text-base shadow-sm justify-center disabled:opacity-50 mt-2"
                     >
                       {isSubmitting ? (
-                        <span>{progress.label || 'Saving your moment…'}</span>
+                        <span>{progress.label || 'Saving your photo…'}</span>
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4 text-sepia-light" />
                           <span>
                             {existing
-                              ? 'Update on the Living Wall'
-                              : 'Place on the Living Wall'}
+                              ? 'Update on the Wall'
+                              : 'Put it on the Wall'}
                           </span>
                         </>
                       )}
@@ -795,7 +810,7 @@ export default function GuestSubmitPage({ params }) {
                   </div>
 
                   <h2 className="font-editorial text-4xl font-normal text-ink mb-2">
-                    {submittedData?.id ? 'Your Polaroid is updated!' : 'Your moment is in.'}
+                    {submittedData?.id ? 'Your Polaroid is updated!' : 'Photo bhej di gayi!'}
                   </h2>
                   <p className="text-xs text-ink-muted font-light leading-relaxed mb-6">
                     {email ? (
@@ -804,7 +819,7 @@ export default function GuestSubmitPage({ params }) {
                         Look up at the live projection screen—it will settle onto the wall shortly!
                       </>
                     ) : (
-                      'Your Polaroid has settled into the curation queue. Look up at the screen shortly!'
+                      'Your Polaroid is waiting for host approval. Keep an eye on the big screen!'
                     )}
                   </p>
 
@@ -812,7 +827,7 @@ export default function GuestSubmitPage({ params }) {
                     <div className="max-w-[210px] mx-auto mb-6">
                       <img
                         src={compositedUrl || rawPreviewUrl}
-                        alt="Your polaroid keepsake"
+                        alt="Your Polaroid"
                         className="w-full rounded shadow-polaroid"
                       />
                     </div>
@@ -822,7 +837,7 @@ export default function GuestSubmitPage({ params }) {
                     {(compositedUrl || submittedData?.polaroidUrl) && (
                       <a
                         href={compositedUrl || submittedData?.polaroidUrl}
-                        download="my-ephemera-polaroid.jpg"
+                        download="my-mehfil-polaroid.jpg"
                         className="btn-editorial btn-editorial-secondary w-full sm:w-auto text-xs px-4 py-2.5"
                       >
                         <Download className="w-4 h-4 text-sepia" />
@@ -836,7 +851,7 @@ export default function GuestSubmitPage({ params }) {
                       className="btn-editorial btn-editorial-primary w-full sm:w-auto text-xs px-4 py-2.5"
                     >
                       <Eye className="w-4 h-4" />
-                      <span>Watch Live Wall</span>
+                      <span>Watch the Live Wall</span>
                     </Link>
                   </div>
 
@@ -847,7 +862,7 @@ export default function GuestSubmitPage({ params }) {
                       className="btn-editorial btn-editorial-secondary w-full py-2.5 text-xs justify-center gap-1.5"
                     >
                       <Edit3 className="w-3.5 h-3.5 text-sepia" />
-                      <span>Edit Photo or Handwritten Note</span>
+                      <span>Change photo or caption</span>
                     </button>
 
                     <button
@@ -861,7 +876,7 @@ export default function GuestSubmitPage({ params }) {
                       className="text-xs text-ink-muted hover:text-sepia inline-flex items-center gap-1 font-medium pt-1"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
-                      <span>Submit another candid photo</span>
+                      <span>Send another photo</span>
                     </button>
                   </div>
                 </motion.div>
@@ -873,7 +888,7 @@ export default function GuestSubmitPage({ params }) {
 
       {/* Footer */}
       <footer className="text-center text-xs text-ink-faint pt-4 border-t border-ink/5">
-        <span>Ephemera • Made to be remembered, designed to let go.</span>
+        <span>Mehfil · Yaadein rakho, data nahi.</span>
       </footer>
     </div>
   );

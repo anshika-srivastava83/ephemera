@@ -1,24 +1,27 @@
 import Link from 'next/link';
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 
-export function Wordmark({ className = '', light = false }) {
+export function Wordmark({ className = '', light = false, showText = true }) {
   return (
     <Link
       href="/"
-      className={`inline-flex items-center gap-2 group transition-opacity hover:opacity-85 ${className}`}
+      className={`inline-flex items-center gap-2.5 group transition-opacity hover:opacity-85 ${className}`}
+      aria-label="Mehfil home"
     >
-      <span
-        className={`font-editorial text-2xl md:text-3xl tracking-tight transition-colors ${
-          light ? 'text-ivory' : 'text-ink'
-        }`}
-      >
-        Ephemera
-      </span>
-      <span
-        className={`inline-block w-1.5 h-1.5 rounded-full ${
-          light ? 'bg-rose' : 'bg-sepia'
-        }`}
+      <img
+        src={light ? '/logo-white.png' : '/logo.png'}
+        alt="Mehfil"
+        className="h-8 md:h-10 w-auto object-contain transition-transform group-hover:scale-105"
       />
+      {showText && (
+        <span
+          className={`font-editorial text-xl md:text-2xl tracking-tight hidden sm:inline-block transition-colors ${
+            light ? 'text-ivory' : 'text-ink'
+          }`}
+        >
+          Mehfil
+        </span>
+      )}
     </Link>
   );
 }

@@ -1,5 +1,7 @@
 'use client';
 
+import { uploadImage } from '../../../../lib/clientUpload';
+
 import { useState, useEffect, useRef, useCallback, createRef } from 'react';
 import Link from 'next/link';
 import TinderCard from 'react-tinder-card';
@@ -187,19 +189,18 @@ export default function ModerationStudio({ params }) {
     setIsUpdatingCaption(true);
     setCaptionError('');
     try {
-      const blob = await compositePolaroid(editingSub.photo_url, newCaption);
-      const formData = new FormData();
-      formData.append('file', blob, `polaroid-${Date.now()}.jpg`);
-      formData.append('folder', eventId);
-
-      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) throw new Error(uploadData.error || 'Could not save the new Polaroid image.');
+      let updatedPolaroidUrl = editingSub.polaroid_url;
+      try {
+        const blob = await compositePolaroid(editingSub.photo_url, newCaption);
+        updatedPolaroidUrl = await uploadImage(blob, `polaroid-${Date.now()}`, eventId);
+      } catch (compError) {
+        console.warn('Re-compositing polaroid skipped during caption edit:', compError);
+      }
 
       const res = await fetch(`/api/submissions/${editingSub.id}/update-caption`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ caption: newCaption.trim(), polaroidUrl: uploadData.url }),
+        body: JSON.stringify({ caption: newCaption.trim(), polaroidUrl: updatedPolaroidUrl }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Caption could not be saved.');
@@ -207,7 +208,7 @@ export default function ModerationStudio({ params }) {
       setPending((prev) =>
         prev.map((s) =>
           s.id === editingSub.id
-            ? { ...s, caption: newCaption.trim(), polaroid_url: uploadData.url }
+            ? { ...s, caption: newCaption.trim(), polaroid_url: updatedPolaroidUrl }
             : s
         )
       );
@@ -587,7 +588,7 @@ export default function ModerationStudio({ params }) {
                   maxLength={CAPTION_LIMIT}
                   onChange={(e) => setNewCaption(e.target.value)}
                   rows={4}
-                  placeholder="Write an inscription…"
+                  placeholder="Write a caption…"
                   className="input-editorial font-caption text-2xl w-full resize-none"
                   autoFocus
                 />

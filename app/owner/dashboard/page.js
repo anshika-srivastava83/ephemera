@@ -75,7 +75,7 @@ export default function OwnerDashboard() {
       return;
     }
 
-    setStatus('Creating celebration event...');
+    setStatus('Creating event...');
     try {
       const res = await fetch('/api/events', {
         method: 'POST',
@@ -121,7 +121,7 @@ export default function OwnerDashboard() {
               Events Registry
             </h1>
             <p className="text-xs sm:text-sm text-ink-muted font-light mt-1">
-              Select an event to open its moderation deck, live wall, or master tapestry suite.
+              Pick an event to approve photos, open the live wall, or make the final collage.
             </p>
           </div>
 
@@ -223,7 +223,7 @@ export default function OwnerDashboard() {
                     <div className="flex items-center gap-4 text-xs text-ink-faint mt-4 pt-3 border-t border-ink/5">
                       <span><strong>{ev.approvedCount || 0}</strong> approved photos</span>
                       <span>•</span>
-                      <span><strong>{ev.pendingCount || 0}</strong> awaiting curation</span>
+                      <span><strong>{ev.pendingCount || 0}</strong> waiting for approval</span>
                     </div>
                   </div>
 
@@ -263,7 +263,7 @@ export default function OwnerDashboard() {
           <div className="mt-12 p-8 bg-ivory border border-ink/10 rounded-2xl shadow-sm">
             <h3 className="font-editorial text-2xl text-ink font-normal mb-1">Quick Event Setup</h3>
             <p className="text-xs text-ink-muted mb-6 font-light">
-              Add another celebration directly to your registry.
+              Create another event.
             </p>
 
             <form onSubmit={handleCreateEvent} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-start">

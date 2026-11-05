@@ -8,8 +8,8 @@ export function Footer() {
         <div>
           <Wordmark />
           <p className="mt-3 text-sm text-ink-muted max-w-sm font-light leading-relaxed">
-            A communal photographic ritual for gatherings, celebrations, and unforgettable nights.
-            Designed to bring physical nostalgia into the digital present.
+            One photo wall for every shaadi, sangeet, birthday and get-together.
+            Scan, click, and watch the whole family's photos come together.
           </p>
         </div>
 
@@ -42,8 +42,8 @@ export function Footer() {
               Philosophy
             </span>
             <ul className="space-y-2">
-              <li className="text-ink-muted">Ephemeral Privacy</li>
-              <li className="text-ink-muted">Archival Tapestry</li>
+              <li className="text-ink-muted">Privacy first</li>
+              <li className="text-ink-muted">Album-ready collage</li>
               <li className="text-ink-muted">No-App Guest Flow</li>
             </ul>
           </div>
@@ -51,8 +51,8 @@ export function Footer() {
       </div>
 
       <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-ink/5 flex flex-col sm:flex-row justify-between items-center text-xs text-ink-faint gap-4">
-        <span>© {new Date().getFullYear()} Ephemera. Made to be remembered, designed to let go.</span>
-        <span>Curated with archival care.</span>
+        <span>© {new Date().getFullYear()} Mehfil. Yaadein rakho, data nahi.</span>
+        <span>Banaya pyaar se, India mein.</span>
       </div>
     </footer>
   );

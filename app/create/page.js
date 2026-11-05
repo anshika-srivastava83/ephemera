@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import QRCode from 'qrcode.react';
+import { PrintableTableCard } from '../../components/brand/PrintableTableCard';
+import { printTableCard, downloadTableCard } from '../../lib/printCard';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
   ArrowRight,
   Printer,
+  Download,
   Copy,
   Check,
   Calendar,
@@ -60,7 +62,7 @@ export default function CreateEventPage() {
     const validation = createEventSchema.safeParse(payload);
     if (!validation.success) {
       setFieldErrors(formatZodErrors(validation.error));
-      setGeneralError('Please correct the highlighted fields before proceeding.');
+      setGeneralError('Please fix the highlighted fields.');
       return;
     }
 
@@ -78,7 +80,7 @@ export default function CreateEventPage() {
         if (data.fieldErrors) {
           setFieldErrors(data.fieldErrors);
         }
-        throw new Error(data.error || 'Failed to create celebration event.');
+        throw new Error(data.error || 'Could not create the event.');
       }
 
       setCreatedEvent(data.event);
@@ -125,15 +127,15 @@ export default function CreateEventPage() {
             >
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sepia/30 bg-sepia/5 text-sepia text-xs uppercase tracking-wider font-medium mb-4">
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Host Setup Wizard</span>
+                <span>New event</span>
               </div>
 
               <h1 className="font-editorial text-4xl sm:text-5xl font-normal text-ink mb-2">
-                Create a Memory Wall
+                Start your mehfil
               </h1>
               <p className="text-ink-muted text-xs sm:text-sm font-light leading-relaxed mb-8">
-                Configure your celebration. You'll receive a real, printable QR card for
-                guest tables and full access to the curation workspace.
+                Fill in the details. You'll get a QR card to print for the tables
+                and a dashboard to approve guest photos.
               </p>
 
               {generalError && (
@@ -201,8 +203,8 @@ export default function CreateEventPage() {
                 </div>
 
                 <div className="p-4 rounded-xl border border-sepia/20 bg-sepia/5 text-xs text-sepia-dark leading-relaxed font-light">
-                  <strong>The Ephemeral Promise:</strong> Individual guest uploads are temporarily held for live projection.
-                  Upon event completion, you can freeze your archival master tapestry and permanently purge individual raw files.
+                  <strong>Our promise:</strong> Guest photos are kept only for the live wall.
+                  After the function, save one final collage and delete every guest photo with one click.
                 </div>
 
                 <button
@@ -210,7 +212,7 @@ export default function CreateEventPage() {
                   disabled={loading}
                   className="btn-editorial btn-editorial-primary w-full py-4 text-base shadow-sm justify-center disabled:opacity-50"
                 >
-                  {loading ? 'Creating celebration...' : 'Generate Wall & Table QR Code'}
+                  {loading ? 'Creating your event...' : 'Create Event & Get QR Code'}
                   {!loading && <ArrowRight className="w-4 h-4 ml-1" />}
                 </button>
               </form>
@@ -230,37 +232,35 @@ export default function CreateEventPage() {
                 {createdEvent.name}
               </h2>
               <p className="text-ink-muted text-xs sm:text-sm font-light mb-8">
-                Your living wall is active and ready to receive guest photographs.
+                Your event is live. Guests can start sending photos now.
               </p>
 
               {/* Printable Table Card Preview */}
-              <div
-                id="printable-card"
-                className="max-w-xs mx-auto p-6 bg-paper-light border-2 border-sepia/30 rounded-2xl shadow-md mb-8 text-center"
-              >
-                <span className="font-editorial text-xl block text-ink mb-1 truncate">
-                  {createdEvent.name}
-                </span>
-                <span className="text-[11px] uppercase tracking-widest text-sepia block mb-4">
-                  Add Your Photo to the Wall
-                </span>
+              <PrintableTableCard
+                eventName={createdEvent.name}
+                guestSubmitUrl={guestSubmitUrl}
+                className="mb-8"
+              />
 
-                <div className="bg-white p-4 rounded-xl shadow-inner inline-block mx-auto mb-4 border border-ink/5">
-                  <QRCode value={guestSubmitUrl} size={180} level="H" includeMargin />
-                </div>
-
-                <p className="font-caption text-xl text-ink-muted leading-tight">
-                  Point your camera.<br />Leave a candid memory for the room.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+              <div className="no-print flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
                 <button
-                  onClick={() => window.print()}
-                  className="btn-editorial btn-editorial-secondary w-full sm:w-auto text-xs px-5 py-2.5"
+                  onClick={() => {
+                    if (!printTableCard({ eventName: createdEvent.name, url: guestSubmitUrl })) {
+                      alert('Your browser blocked the print window. Allow pop-ups, or use "Save as image".');
+                    }
+                  }}
+                  className="btn-editorial btn-editorial-primary w-full sm:w-auto text-xs px-5 py-2.5"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>Print Table QR Cards</span>
+                  <span>Print Table QR Card</span>
+                </button>
+
+                <button
+                  onClick={() => downloadTableCard(createdEvent.name).catch(() => alert('Could not create the image. Try Print instead.'))}
+                  className="btn-editorial btn-editorial-secondary w-full sm:w-auto text-xs px-5 py-2.5"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Save as Image</span>
                 </button>
 
                 <button
@@ -272,12 +272,12 @@ export default function CreateEventPage() {
                 </button>
               </div>
 
-              <div className="pt-6 border-t border-ink/10 flex flex-wrap items-center justify-center gap-4">
+              <div className="no-print pt-6 border-t border-ink/10 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href={`/events/${createdEvent.id}`}
                   className="btn-editorial btn-editorial-primary text-xs px-5 py-2.5"
                 >
-                  <span>Open Host Workspace</span>
+                  <span>Open Host Dashboard</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 

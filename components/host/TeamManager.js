@@ -170,7 +170,7 @@ export function TeamManager({ eventId, eventName, compact = false, onMemberCount
         <div className="space-y-1">
           <p className="font-medium text-ink">Role Responsibilities</p>
           <p>
-            <strong className="text-sepia font-semibold">Hosts</strong> have full event control: settings, closing submissions, live wall styles, caption editing, final tapestry artwork, and team roster.
+            <strong className="text-sepia font-semibold">Hosts</strong> have full event control: settings, closing submissions, live wall styles, caption editing, final collage, and team roster.
           </p>
           <p>
             <strong className="text-emerald-800 font-semibold">Collaborators</strong> have swipe moderation access: approve or pass guest submissions in the deck. Cannot modify settings or delete photos.
@@ -249,7 +249,7 @@ export function TeamManager({ eventId, eventName, compact = false, onMemberCount
                       {selectedRole === 'collaborator' && <Check className="w-3.5 h-3.5 text-emerald-700" />}
                     </div>
                     <p className="text-xs text-ink-muted mt-0.5 font-light leading-snug">
-                      Swipe moderation deck, review photographs, and assist curating the wall.
+                      Swipe to approve or skip photos and help run the wall.
                     </p>
                   </div>
                 </button>
@@ -380,7 +380,7 @@ export function TeamManager({ eventId, eventName, compact = false, onMemberCount
                 : `No members assigned with the ${filter} role`}
             </p>
             <p className="text-xs text-ink-muted font-light mt-1 max-w-sm mx-auto">
-              Assign co-hosts or moderators above so they can sign in and assist with this celebration.
+              Add co-hosts or helpers above so they can sign in and help during this function.
             </p>
           </div>
         ) : (

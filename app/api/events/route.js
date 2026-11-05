@@ -49,6 +49,10 @@ export async function GET(request) {
     const url = new URL(request.url);
     const eventId = url.searchParams.get('eventId') || undefined;
     const role = await getRole(eventId);
+    // Lightweight check used by the host shell: skip loading every event
+    if (url.searchParams.get('roleOnly') === '1') {
+      return NextResponse.json({ role });
+    }
     const events = await getEvents(role);
 
     if (!role) {

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import QRCode from 'qrcode.react';
+import { PrintableTableCard } from '../../../components/brand/PrintableTableCard';
+import { printTableCard, downloadTableCard } from '../../../lib/printCard';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -14,6 +15,7 @@ import {
   Eye,
   Sliders,
   Printer,
+  Download,
   Trash2,
   Lock,
   ArrowRight,
@@ -204,7 +206,7 @@ export default function HostEventWorkspace({ params }) {
           >
             <div>
               <span className="text-xs uppercase font-medium tracking-wider text-ink-faint block mb-1">
-                Awaiting Curation
+                Waiting for approval
               </span>
               <span className="font-editorial text-4xl text-ink font-normal block">
                 {pending.length}
@@ -265,7 +267,7 @@ export default function HostEventWorkspace({ params }) {
           >
             <div>
               <span className="text-xs uppercase font-medium tracking-wider text-ink-faint block mb-1">
-                Master Tapestry
+                Album Collage
               </span>
               <span className="font-editorial text-xl text-ink font-normal block mt-1">
                 {event?.final_wall_image_url ? 'Archived Artwork Ready' : 'Ready to Freeze'}
@@ -350,7 +352,7 @@ export default function HostEventWorkspace({ params }) {
 
             <div className="space-y-4">
               <p className="text-xs text-ink-muted font-light leading-relaxed">
-                Choose how memories settle across the live projection wall. Pick from 12 compositions, from tidy
+                Choose how photos are arranged on the live wall. Pick from 12 layouts, from tidy
                 gallery rows to spirals and confetti.
               </p>
 
@@ -368,7 +370,7 @@ export default function HostEventWorkspace({ params }) {
                   href={`/events/${eventId}/tapestry`}
                   className="p-4 rounded-xl border border-ink/10 bg-paper-light hover:border-sepia/50 transition-all flex flex-col justify-between"
                 >
-                  <span className="font-editorial text-lg text-ink">Final Tapestry</span>
+                  <span className="font-editorial text-lg text-ink">Final Collage</span>
                   <span className="text-xs text-ink-muted mt-2">High-res artwork export</span>
                 </Link>
               </div>
@@ -381,7 +383,7 @@ export default function HostEventWorkspace({ params }) {
                     className="text-rose-dark hover:underline font-medium inline-flex items-center gap-1"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span>Dispose photographs or delete event</span>
+                    <span>Delete photos or the event</span>
                   </Link>
                 </div>
               )}
@@ -427,7 +429,7 @@ export default function HostEventWorkspace({ params }) {
               <div className="py-8 text-center text-ink-faint font-light">
                 <Users className="w-8 h-8 mx-auto text-sepia/50 mb-2" />
                 <p>No team members assigned yet.</p>
-                <p className="text-xs mt-1">Assign co-hosts or moderators above so they can assist during the celebration.</p>
+                <p className="text-xs mt-1">Add co-hosts or helpers above so they can approve photos during the function.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -462,7 +464,7 @@ export default function HostEventWorkspace({ params }) {
       {/* QR Code Printable Modal (Owner only) */}
       {role === 'owner' && showQrModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/60 backdrop-blur-sm animate-fade-in"
+          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 bg-ink/60 backdrop-blur-sm animate-fade-in overflow-y-auto overscroll-contain"
           role="dialog"
           aria-modal="true"
           aria-labelledby="qr-modal-heading"
@@ -471,38 +473,43 @@ export default function HostEventWorkspace({ params }) {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-ivory border border-ink/10 rounded-2xl max-w-sm w-full p-8 text-center shadow-2xl relative"
+            className="bg-ivory border border-ink/10 rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl relative"
           >
-            <button
-              onClick={() => setShowQrModal(false)}
-              className="absolute top-4 right-4 text-ink-muted hover:text-ink text-sm p-1 rounded-full"
-              aria-label="Close dialog"
-            >
-              ✕
-            </button>
-
-            <span id="qr-modal-heading" className="font-editorial text-2xl text-ink block mb-1">
-              {event?.name}
-            </span>
-            <span className="text-xs uppercase tracking-widest text-sepia block mb-6 font-semibold">
-              Scan to Contribute
-            </span>
-
-            <div className="p-4 bg-white rounded-xl inline-block shadow-inner border border-ink/5 mb-4">
-              <QRCode value={guestSubmitUrl} size={200} level="H" includeMargin />
+            <div className="no-print">
+              <button
+                onClick={() => setShowQrModal(false)}
+                className="absolute top-4 right-4 text-ink-muted hover:text-ink text-sm p-1 rounded-full z-10"
+                aria-label="Close dialog"
+              >
+                ✕
+              </button>
             </div>
 
-            <p className="font-caption text-xl text-ink-muted mb-6">
-              Point your camera.<br />Leave your candid memory.
-            </p>
+            {/* Dedicated printable card (visible in print preview & physical print) */}
+            <PrintableTableCard
+              eventName={event?.name}
+              guestSubmitUrl={guestSubmitUrl}
+            />
 
-            <div className="flex flex-col gap-2.5">
+            <div className="no-print flex flex-col gap-2.5 mt-5">
               <button
-                onClick={() => window.print()}
+                onClick={() => {
+                  if (!printTableCard({ eventName: event?.name, url: guestSubmitUrl })) {
+                    alert('Your browser blocked the print window. Allow pop-ups, or use "Save as image".');
+                  }
+                }}
                 className="btn-editorial btn-editorial-primary w-full py-3 text-xs justify-center shadow-xs"
               >
                 <Printer className="w-4 h-4" />
                 <span>Print Table Card</span>
+              </button>
+
+              <button
+                onClick={() => downloadTableCard(event?.name).catch(() => alert('Could not create the image. Try Print instead.'))}
+                className="btn-editorial btn-editorial-secondary w-full py-2.5 text-xs justify-center"
+              >
+                <Download className="w-3.5 h-3.5 text-sepia" />
+                <span>Save as Image (PNG)</span>
               </button>
 
               <button

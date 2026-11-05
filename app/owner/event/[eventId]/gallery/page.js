@@ -1,5 +1,7 @@
 'use client';
 
+import { uploadImage } from '../../../../../lib/clientUpload';
+
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
@@ -176,19 +178,18 @@ export default function GalleryPage({ params }) {
 
     try {
       // Re-compose the Polaroid from the original photo with the new caption
-      const blob = await compositePolaroid(editingSub.photo_url, newCaption);
-      const formData = new FormData();
-      formData.append('file', blob, `polaroid-${Date.now()}.jpg`);
-      formData.append('folder', eventId);
-
-      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) throw new Error(uploadData.error || 'Could not save the new Polaroid image.');
+      let updatedPolaroidUrl = editingSub.polaroid_url;
+      try {
+        const blob = await compositePolaroid(editingSub.photo_url, newCaption);
+        updatedPolaroidUrl = await uploadImage(blob, `polaroid-${Date.now()}`, eventId);
+      } catch (compError) {
+        console.warn('Re-compositing polaroid skipped during caption edit:', compError);
+      }
 
       const res = await fetch(`/api/submissions/${editingSub.id}/update-caption`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ caption: newCaption.trim(), polaroidUrl: uploadData.url }),
+        body: JSON.stringify({ caption: newCaption.trim(), polaroidUrl: updatedPolaroidUrl }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Caption could not be saved.');
@@ -196,7 +197,7 @@ export default function GalleryPage({ params }) {
       setSubmissions((prev) =>
         prev.map((s) =>
           s.id === editingSub.id
-            ? { ...s, caption: newCaption.trim(), polaroid_url: uploadData.url }
+            ? { ...s, caption: newCaption.trim(), polaroid_url: updatedPolaroidUrl }
             : s
         )
       );
@@ -224,10 +225,10 @@ export default function GalleryPage({ params }) {
       );
       toast.success(
         newStatus === 'approved'
-          ? 'Photograph approved to the live wall.'
+          ? 'Photo is on the live wall.'
           : newStatus === 'rejected'
-          ? 'Photograph passed.'
-          : 'Photograph returned to awaiting queue.'
+          ? 'Photo skipped.'
+          : 'Photo moved back to waiting.'
       );
     } catch (err) {
       toast.error(err.message || 'Status update failed.');
@@ -351,11 +352,11 @@ export default function GalleryPage({ params }) {
         {loadState === 'ready' && visible.length === 0 && (
           <div className="text-center py-20 bg-ivory border border-dashed border-ink/20 rounded-2xl">
             <p className="font-editorial text-2xl text-ink mb-1">
-              {submissions.length === 0 ? 'No photographs yet.' : 'Nothing in this view.'}
+              {submissions.length === 0 ? 'No photos yet.' : 'Nothing in this view.'}
             </p>
             <p className="text-sm text-ink-muted font-light">
               {submissions.length === 0
-                ? 'Photographs appear here as soon as guests submit them.'
+                ? 'Photos show up here as soon as guests send them.'
                 : 'Try another filter.'}
             </p>
           </div>
@@ -551,7 +552,7 @@ export default function GalleryPage({ params }) {
               Edit caption
             </h2>
             <p className="text-xs text-ink-muted font-light mb-4">
-              The Polaroid is redrawn from the original photograph with your new handwriting.
+              The Polaroid is remade from the original photo with your new caption.
             </p>
 
             <div className="grid sm:grid-cols-[150px_1fr] gap-5">

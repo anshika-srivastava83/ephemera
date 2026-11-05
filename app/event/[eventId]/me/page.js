@@ -19,22 +19,22 @@ import { XCircle } from 'lucide-react';
 
 const STATUS_MAP = {
   pending: {
-    label: 'Awaiting approval',
+    label: 'Waiting for approval',
     badge: 'bg-amber-100 text-amber-900 border-amber-300',
     icon: Clock,
-    desc: 'The host reviews each photograph before it joins the wall. This page updates when you refresh.',
+    desc: 'The host checks every photo before it goes on the wall. Refresh this page to see the latest.',
   },
   approved: {
     label: "You're on the wall",
     badge: 'bg-emerald-100 text-emerald-900 border-emerald-300',
     icon: CheckCircle2,
-    desc: 'The host approved your photograph. Look up — it is part of tonight’s living wall.',
+    desc: 'Your photo is on the wall! Look up at the big screen.',
   },
   rejected: {
-    label: 'Not selected for the wall',
+    label: 'Not shown on the wall',
     badge: 'bg-rose/20 text-rose-dark border-rose/40',
     icon: XCircle,
-    desc: 'The host chose not to display this one. Your Polaroid is still yours to keep, and you can send a different photograph.',
+    desc: 'The host did not pick this one for the wall. Your Polaroid is still yours to keep, and you can send another photo.',
   },
 };
 
@@ -51,7 +51,7 @@ export default function MyPhotoKeepsakePage({ params }) {
         const res = await fetch(`/api/submissions/by-token?token=${encodeURIComponent(token)}`);
         const data = await res.json();
         if (!res.ok) {
-          setError(data.error || 'Could not locate your photograph link.');
+          setError(data.error || 'Could not find your photo link.');
         } else {
           setSub(data.submission);
         }
@@ -91,7 +91,7 @@ export default function MyPhotoKeepsakePage({ params }) {
           {loading ? (
             <div className="text-center py-20 text-ink-muted">
               <Sparkles className="w-8 h-8 animate-spin mx-auto text-sepia mb-3" />
-              <p className="font-editorial text-2xl">Retrieving your keepsake...</p>
+              <p className="font-editorial text-2xl">Getting your photo...</p>
             </div>
           ) : error ? (
             <div className="bg-ivory border border-ink/10 rounded-2xl p-8 text-center shadow-sm">
@@ -101,7 +101,7 @@ export default function MyPhotoKeepsakePage({ params }) {
                 href={`/event/${eventId}/submit`}
                 className="btn-editorial btn-editorial-primary text-xs px-4 py-2 inline-flex"
               >
-                Submit New Photo
+                Send a New Photo
               </Link>
             </div>
           ) : sub ? (
@@ -152,7 +152,7 @@ export default function MyPhotoKeepsakePage({ params }) {
                   href={sub.photo_url}
                   download="raw-photo.jpg"
                   className="btn-editorial btn-editorial-secondary text-xs px-3.5 py-2.5"
-                  title="Download Raw Photograph"
+                  title="Download original photo"
                 >
                   <span>Raw Photo</span>
                 </a>
@@ -179,12 +179,12 @@ export default function MyPhotoKeepsakePage({ params }) {
                   </Link>
                 ) : (
                   <p className="text-[11px] text-ink-faint font-light pt-1">
-                    Submissions are closed, so photographs can no longer be replaced.
+                    Photo upload is closed, so photos can't be changed now.
                   </p>
                 )}
                 {sub.events?.status === 'open' && sub.status !== 'rejected' && (
                   <p className="text-[11px] text-ink-faint font-light">
-                    A new photograph goes back to the host for approval.
+                    A new photo goes to the host for approval again.
                   </p>
                 )}
               </div>
@@ -195,7 +195,7 @@ export default function MyPhotoKeepsakePage({ params }) {
 
       {/* Footer */}
       <footer className="text-center text-xs text-ink-faint py-3 border-t border-ink/5">
-        <span>Ephemera Guest Keepsake Suite</span>
+        <span>Mehfil</span>
       </footer>
     </div>
   );

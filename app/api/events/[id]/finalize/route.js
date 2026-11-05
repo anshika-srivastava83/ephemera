@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { isOwner } from '../../../../../lib/auth';
 import { finalizeEvent, getEventSubmissionEmails } from '../../../../../lib/dataService';
 import { sendWallFinalizedEmail } from '../../../../../lib/sendEmail';
+import { isEventUpload } from '../../../../../lib/storage';
+
+// Serverless functions are frozen once the response is sent, so the guest
+// emails are sent before responding. Allow time for large guest lists.
+export const maxDuration = 60;
+const EMAIL_CONCURRENCY = 5;
 
 export async function POST(request, { params }) {
   try {
@@ -10,41 +16,47 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
     }
 
-    if (typeof finalWallImageUrl !== 'string' || !finalWallImageUrl.startsWith('/uploads/')) {
+    if (!isEventUpload(finalWallImageUrl, params.id)) {
       return NextResponse.json({ error: 'A saved artwork image is required.' }, { status: 400 });
     }
 
     const event = await finalizeEvent(params.id, finalWallImageUrl, chosenLayoutId);
 
-    // Asynchronously email the final tapestry wall to all guests who submitted photos
+    let emailsSent = 0;
+    let emailsFailed = 0;
     if (event) {
-      getEventSubmissionEmails(params.id)
-        .then(async (guests) => {
-          const origin = new URL(request.url).origin;
-          const wallUrl = `${origin}/wall/${params.id}`;
-          for (const guest of guests) {
-            if (!guest.email) continue;
+      try {
+        const guests = (await getEventSubmissionEmails(params.id)).filter((g) => g.email);
+        const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+        const wallUrl = `${origin}/wall/${params.id}`;
+        const queue = [...guests];
+        const worker = async () => {
+          while (queue.length) {
+            const guest = queue.shift();
             try {
-              await sendWallFinalizedEmail({
+              const r = await sendWallFinalizedEmail({
                 to: guest.email,
                 eventName: event.name,
                 eventId: params.id,
                 wallUrl,
-                finalImageUrl,
+                finalImageUrl: finalWallImageUrl,
                 polaroidUrl: guest.polaroid_url,
                 photoUrl: guest.photo_url,
               });
+              if (r.sent) emailsSent += 1;
             } catch (err) {
-              console.warn(`[Final Wall Email] Error sending to ${guest.email}:`, err.message);
+              emailsFailed += 1;
+              console.warn('[Final Wall Email] Failed for a guest:', err.message);
             }
           }
-        })
-        .catch((err) => {
-          console.warn('[Final Wall Email] Failed fetching guests:', err.message);
-        });
+        };
+        await Promise.all(Array.from({ length: EMAIL_CONCURRENCY }, worker));
+      } catch (err) {
+        console.warn('[Final Wall Email] Failed fetching guests:', err.message);
+      }
     }
 
-    return NextResponse.json({ event, ok: true });
+    return NextResponse.json({ event, ok: true, emailsSent, emailsFailed });
   } catch (err) {
     console.error('Error finalizing event:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });

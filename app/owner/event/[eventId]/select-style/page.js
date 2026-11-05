@@ -165,7 +165,7 @@ export default function SelectStylePage({ params }) {
     try {
       const dataUrl = await toPng(node, { pixelRatio: 2 });
       const link = document.createElement('a');
-      link.download = `ephemera-wall-${styleId}.png`;
+      link.download = `mehfil-wall-${styleId}.png`;
       link.href = dataUrl;
       link.click();
       toast.success('Sample image saved.');

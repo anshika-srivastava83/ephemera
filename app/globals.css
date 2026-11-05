@@ -1,21 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..700,0..100,0..1;1,9..144,300..700,0..100,0..1&family=Archivo:ital,wght@0,400..700;1,400..700&family=Reenie+Beanie&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..700,0..100,0..1;1,9..144,300..700,0..100,0..1&family=Archivo:ital,wght@0,400..700;1,400..700&family=Reenie+Beanie&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  /* Default (landing / marketing): archival paper + sepia */
-  --paper: 245 240 231;
-  --paper-light: 250 247 242;
-  --paper-dark: 235 228 216;
+  /* Default (landing / marketing): bright ivory paper, calligraphy-black ink,
+     vermilion (kumkum) accent: drawn from the Mehfil logo */
+  --paper: 248 243 233;
+  --paper-light: 252 249 242;
+  --paper-dark: 237 229 214;
   --ivory: 255 252 246;
-  --ink: 37 35 31;
-  --ink-muted: 85 81 75;
-  --ink-faint: 133 128 119;
-  --accent: 139 111 85;
-  --accent-light: 166 139 113;
-  --accent-dark: 103 79 59;
+  --ink: 22 20 18;
+  --ink-muted: 78 73 67;
+  --ink-faint: 128 122 112;
+  --accent: 158 42 34;
+  --accent-light: 190 78 66;
+  --accent-dark: 118 28 23;
   --accent-2: 200 163 155;
   --accent-2-light: 222 191 184;
   --accent-2-dark: 166 125 116;
@@ -34,6 +35,7 @@
 
   --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-sans: 'Archivo', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-deva: 'Tiro Devanagari Hindi', 'Noto Serif Devanagari', serif;
   --font-handwriting: 'Reenie Beanie', 'Segoe Script', cursive;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -68,23 +70,23 @@
 
 /* Owner — refined lavender accent over warm neutral surfaces */
 .theme-owner {
-  --paper: 244 241 237;
-  --paper-light: 250 248 245;
-  --paper-dark: 232 227 233;
-  --ivory: 255 253 251;
-  --ink: 38 33 48;
-  --ink-muted: 90 83 104;
-  --ink-faint: 137 130 150;
-  --accent: 111 91 184;
-  --accent-light: 159 143 214;
-  --accent-dark: 82 65 154;
-  --accent-2: 183 161 222;
-  --accent-2-light: 211 198 238;
-  --accent-2-dark: 141 116 194;
+  --paper: 246 241 232;
+  --paper-light: 252 249 243;
+  --paper-dark: 235 227 213;
+  --ivory: 255 253 249;
+  --ink: 22 20 18;
+  --ink-muted: 80 74 68;
+  --ink-faint: 130 123 113;
+  --accent: 158 42 34;
+  --accent-light: 190 78 66;
+  --accent-dark: 118 28 23;
+  --accent-2: 200 163 155;
+  --accent-2-light: 222 191 184;
+  --accent-2-dark: 166 125 116;
   background-color: rgb(var(--paper));
   background-image:
-    radial-gradient(60rem 36rem at 105% -10%, rgba(183, 161, 222, 0.22), transparent 60%),
-    radial-gradient(48rem 30rem at -10% 110%, rgba(211, 198, 238, 0.28), transparent 60%);
+    radial-gradient(60rem 36rem at 105% -10%, rgba(158, 42, 34, 0.07), transparent 60%),
+    radial-gradient(48rem 30rem at -10% 110%, rgba(138, 109, 59, 0.10), transparent 60%);
   background-attachment: fixed;
 }
 
@@ -196,6 +198,85 @@ body::before {
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* ───────── Mehfil brand ornaments (from the logo) ───────── */
+.font-deva {
+  font-family: var(--font-deva);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Headings: calligraphic contrast, balanced wrapping */
+h1, h2, h3 { text-wrap: balance; }
+.font-editorial { font-variation-settings: 'SOFT' 0, 'WONK' 1; }
+
+/* Rotated-square bullet, like the diamonds in the logo */
+.ornate-diamond {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: rgb(var(--accent));
+  transform: rotate(45deg);
+  flex: none;
+}
+
+/* Eyebrow labels flanked by diamonds */
+.eyebrow-ornate {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgb(var(--accent));
+}
+.eyebrow-ornate::before,
+.eyebrow-ornate::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: currentColor;
+  transform: rotate(45deg);
+  flex: none;
+}
+
+/* Double-rule frame with diamond corners: invitation-card feel */
+.ornate-frame {
+  position: relative;
+  border: 1px solid rgb(var(--ink) / 0.85);
+  outline: 1px solid rgb(var(--ink) / 0.25);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+.ornate-frame::before,
+.ornate-frame::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  background: rgb(var(--accent));
+  transform: rotate(45deg);
+  top: -5px;
+  left: 50%;
+  margin-left: -4.5px;
+}
+.ornate-frame::after { top: auto; bottom: -5px; }
+
+/* Numerals in a double ring */
+.ornate-numeral {
+  box-shadow: 0 0 0 3px rgb(var(--paper-light)), 0 0 0 4px rgb(var(--ink) / 0.35);
+  border-color: rgb(var(--ink) / 0.85) !important;
+  color: rgb(var(--accent));
+}
+
+/* Section headings get a thin ink underline stroke that tapers like a pen flick */
+.pen-rule {
+  height: 2px;
+  width: 72px;
+  background: linear-gradient(90deg, rgb(var(--ink)) 0%, rgb(var(--ink) / 0) 100%);
+  border-radius: 2px;
+}
+
 /* Editorial Buttons */
 .btn-editorial {
   display: inline-flex;
@@ -225,6 +306,7 @@ body::before {
   background-color: rgb(var(--ink));
   color: rgb(var(--paper-light));
   border: 1px solid rgb(var(--ink));
+  box-shadow: inset 0 0 0 2px rgb(var(--ink)), inset 0 0 0 3px rgba(255, 252, 246, 0.22);
 }
 
 .btn-editorial-primary:hover:not(:disabled) {
@@ -558,19 +640,108 @@ body::before {
   box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.8), 0 6px 14px -2px rgba(0, 0, 0, 0.6);
 }
 
-/* Printing the table QR card should output only the card */
+/* Printing the table QR card */
 @media print {
-  body * { visibility: hidden !important; }
-  #printable-card, #printable-card * { visibility: visible !important; }
-  #printable-card {
-    position: absolute;
-    left: 50%;
-    top: 24px;
-    transform: translateX(-50%);
-    box-shadow: none !important;
+  @page {
+    size: auto;
+    margin: 15mm;
   }
-  body::before { display: none !important; }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #1a1815 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide everything on the page by default */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Exclude elements marked as no-print */
+  .no-print,
+  .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Make the printable card and its descendants visible and cleanly centered */
+  #printable-card,
+  #printable-card * {
+    visibility: visible !important;
+  }
+
+  #printable-card {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 auto !important;
+    width: 360px !important;
+    max-width: 90% !important;
+    background: #FAF7F0 !important;
+    border: 2px solid #8A6D3B !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    box-shadow: none !important;
+    text-align: center !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
 }
 
 /* Utilities that must beat the base control padding (custom CSS is declared after Tailwind) */
 .input-editorial.pl-10 { padding-left: 2.5rem; }
+
+/* ───────────── Mobile optimisations ───────────── */
+body {
+  min-height: 100dvh; /* iOS/Android toolbars no longer cause jumpy layouts */
+  overscroll-behavior-y: none;
+}
+body::before {
+  height: 100dvh;
+}
+
+/* Respect notches / home indicators */
+.safe-bottom { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+.safe-top { padding-top: max(0px, env(safe-area-inset-top)); }
+
+@media (max-width: 640px) {
+  /* 16px+ inputs stop iOS Safari from zooming the page on focus */
+  input, select, textarea { font-size: 16px !important; }
+
+  /* Comfortable thumb-sized tap targets */
+  .btn-editorial { min-height: 44px; }
+
+  /* Dialogs: use the full width and never get cut off */
+  [role='dialog'] > div { max-height: none; }
+}
+
+/* Keep long-press / double-tap from selecting UI chrome on touch devices */
+@media (pointer: coarse) {
+  button, a, [role='button'] {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

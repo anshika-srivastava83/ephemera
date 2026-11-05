@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { EditorialNav } from '../components/brand/EditorialNav';
 import { Footer } from '../components/brand/Footer';
+import { FlourishDivider } from '../components/brand/Ornament';
 import { PolaroidCard } from '../components/polaroid/PolaroidCard';
 import { computeWallPositions, computeCardWidth } from '../lib/wallLayout';
 
@@ -23,7 +24,7 @@ const HERO_POLAROIDS = [
   {
     id: 'hero-1',
     photoUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&auto=format&fit=crop&q=80',
-    caption: 'under the olive trees with everyone we love',
+    caption: 'pheron ke baad pehli family photo',
     rotation: -4,
     scale: 0.98,
     className: 'top-4 left-6 z-10',
@@ -31,7 +32,7 @@ const HERO_POLAROIDS = [
   {
     id: 'hero-2',
     photoUrl: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&auto=format&fit=crop&q=80',
-    caption: 'the impromptu toast that made everyone cry',
+    caption: 'bidaai pe sab ro pade',
     rotation: 5,
     scale: 1.02,
     className: 'top-16 left-48 z-20',
@@ -39,7 +40,7 @@ const HERO_POLAROIDS = [
   {
     id: 'hero-3',
     photoUrl: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?w=800&auto=format&fit=crop&q=80',
-    caption: 'dancing till the candles burned all the way down',
+    caption: 'mama ji ka dance, sabne record kiya',
     rotation: -2,
     scale: 0.96,
     className: 'top-40 left-12 z-15',
@@ -47,7 +48,7 @@ const HERO_POLAROIDS = [
   {
     id: 'hero-4',
     photoUrl: 'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=800&auto=format&fit=crop&q=80',
-    caption: 'laughter in the courtyard',
+    caption: 'mehendi ke baad sabki selfie',
     rotation: 7,
     scale: 0.94,
     className: 'top-48 left-64 z-25',
@@ -131,19 +132,23 @@ export default function Home() {
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="lg:col-span-7 flex flex-col items-start"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-sepia/30 bg-sepia/5 text-sepia text-xs uppercase tracking-wider font-medium mb-6">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Communal Event Photography</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="Mehfil"
+              className="h-24 sm:h-28 md:h-32 w-auto object-contain -ml-3 mb-1 select-none"
+              draggable={false}
+            />
+            <span className="eyebrow-ornate mb-5">Shaadi · Sangeet · Birthday · Har mehfil</span>
 
             <h1 className="font-editorial text-5xl sm:text-6xl md:text-7xl font-normal tracking-tight text-ink leading-[1.08] mb-6">
-              Some nights deserve to stay together.
+              Saari yaadein, ek deewar par.
             </h1>
+            <FlourishDivider className="mb-6 -ml-1" width={200} />
 
             <p className="text-lg md:text-xl text-ink-muted font-light leading-relaxed max-w-xl mb-8">
-              Every guest brings a memory. Every memory finds its place. Ephemera turns
-              the fleeting moments of a gathering into one living photograph of everyone who
-              was there.
+              Guests scan the QR on their table, click a photo, and it shows up on the big screen,
+              live. No app to download, no sign-up. Just like passing the camera around
+              at the sangeet, but now everyone's photos end up in one place.
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -161,7 +166,7 @@ export default function Home() {
                   target="_blank"
                   className="btn-editorial btn-editorial-secondary text-base px-6 py-3.5"
                 >
-                  <span>Experience the wall</span>
+                  <span>See the live wall</span>
                   <span className="text-xs text-sepia">↗</span>
                 </Link>
               ) : (
@@ -246,67 +251,65 @@ export default function Home() {
       <section className="py-24 bg-paper-light border-y border-ink/10 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="max-w-xl mb-16">
-            <span className="text-xs uppercase font-medium tracking-widest text-sepia">
-              The Journey
-            </span>
+            <span className="eyebrow-ornate">How it works</span>
             <h2 className="font-editorial text-4xl md:text-5xl font-normal text-ink mt-2">
-              From a table glance to a timeless tapestry.
+              From the table to the big screen.
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             {/* Step 1 */}
             <div className="flex flex-col">
-              <div className="w-10 h-10 rounded-full border border-ink/15 flex items-center justify-center font-editorial text-lg text-sepia mb-4 bg-paper">
+              <div className="w-10 h-10 rounded-full border flex items-center justify-center font-editorial text-lg mb-5 bg-paper ornate-numeral">
                 1
               </div>
               <h3 className="font-editorial text-xl font-normal text-ink mb-2">Scan the Table QR</h3>
               <p className="text-sm text-ink-muted leading-relaxed font-light">
-                No apps to install, no passwords to create. Guests tap their camera on a card at their table.
+                No app, no login. Guests just point their phone camera at the card on the table.
               </p>
             </div>
 
             {/* Step 2 */}
             <div className="flex flex-col">
-              <div className="w-10 h-10 rounded-full border border-ink/15 flex items-center justify-center font-editorial text-lg text-sepia mb-4 bg-paper">
+              <div className="w-10 h-10 rounded-full border flex items-center justify-center font-editorial text-lg mb-5 bg-paper ornate-numeral">
                 2
               </div>
-              <h3 className="font-editorial text-xl font-normal text-ink mb-2">Snap & Inscribe</h3>
+              <h3 className="font-editorial text-xl font-normal text-ink mb-2">Click & Write</h3>
               <p className="text-sm text-ink-muted leading-relaxed font-light">
-                Capture an honest candid shot and write a short, heartfelt caption in ink-style cursive.
+                Take a photo and add a one-line caption: a wish, a shayari, or just a joke.
               </p>
             </div>
 
             {/* Step 3 */}
             <div className="flex flex-col">
-              <div className="w-10 h-10 rounded-full border border-ink/15 flex items-center justify-center font-editorial text-lg text-sepia mb-4 bg-paper">
+              <div className="w-10 h-10 rounded-full border flex items-center justify-center font-editorial text-lg mb-5 bg-paper ornate-numeral">
                 3
               </div>
-              <h3 className="font-editorial text-xl font-normal text-ink mb-2">Host Curates</h3>
+              <h3 className="font-editorial text-xl font-normal text-ink mb-2">Host Approves</h3>
               <p className="text-sm text-ink-muted leading-relaxed font-light">
-                A swift, delightful swipe deck allows the hosts to curate and approve photos in real time.
+                Host or family swipes through the photos. Swipe right to approve, left to skip.
               </p>
             </div>
 
             {/* Step 4 */}
             <div className="flex flex-col">
-              <div className="w-10 h-10 rounded-full border border-ink/15 flex items-center justify-center font-editorial text-lg text-sepia mb-4 bg-paper">
+              <div className="w-10 h-10 rounded-full border flex items-center justify-center font-editorial text-lg mb-5 bg-paper ornate-numeral">
                 4
               </div>
-              <h3 className="font-editorial text-xl font-normal text-ink mb-2">The Living Wall</h3>
+              <h3 className="font-editorial text-xl font-normal text-ink mb-2">Live Wall</h3>
               <p className="text-sm text-ink-muted leading-relaxed font-light">
-                Approved Polaroids float onto the projection screen, settling into organic constellations.
+                Approved photos pop up on the projector one by one, like Polaroids on a table.
               </p>
             </div>
 
             {/* Step 5 */}
             <div className="flex flex-col">
-              <div className="w-10 h-10 rounded-full border border-ink/15 flex items-center justify-center font-editorial text-lg text-sepia mb-4 bg-paper">
+              <div className="w-10 h-10 rounded-full border flex items-center justify-center font-editorial text-lg mb-5 bg-paper ornate-numeral">
                 5
               </div>
-              <h3 className="font-editorial text-xl font-normal text-ink mb-2">Master Tapestry</h3>
+              <h3 className="font-editorial text-xl font-normal text-ink mb-2">Album Collage</h3>
               <p className="text-sm text-ink-muted leading-relaxed font-light">
-                One high-res master artwork is preserved forever; individual uploads are respectfully purged.
+                One big collage of the whole night to print for the album. Everything else is deleted.
               </p>
             </div>
           </div>
@@ -320,13 +323,13 @@ export default function Home() {
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-darkroom-border text-rose-light text-xs uppercase tracking-wider mb-3">
                 <Maximize2 className="w-3.5 h-3.5" />
-                <span>Venue Projection Experience</span>
+                <span>For the stage screen</span>
               </div>
               <h2 className="font-editorial text-4xl md:text-5xl font-normal tracking-tight text-ivory">
-                The Live Darkroom Wall
+                The live photo wall
               </h2>
               <p className="text-ivory/60 text-sm md:text-base font-light mt-2 max-w-lg">
-                Projected at scale across the venue. Photographs appear as illuminated physical prints against the night.
+                Put it on the stage screen or LED wall. Photos appear one by one while the DJ plays.
               </p>
             </div>
 
@@ -342,7 +345,7 @@ export default function Home() {
                       : 'text-ivory/60 hover:text-ivory'
                   }`}
                 >
-                  {mode}
+                  {{ scatter: 'Scatter', constellation: 'Groups', spiral: 'Spiral', tabletop: 'Tabletop' }[mode]}
                 </button>
               ))}
             </div>
@@ -401,41 +404,41 @@ export default function Home() {
       <section className="py-24 md:py-32 bg-paper px-6 border-b border-ink/10">
         <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
           <span className="text-xs uppercase font-medium tracking-widest text-sepia mb-3">
-            The Philosophy
+            Your privacy
           </span>
           <h2 className="font-editorial text-4xl sm:text-5xl md:text-6xl font-normal text-ink leading-tight mb-8">
-            Made to be remembered.<br />Designed to let go.
+            Yaadein rakho,<br />data nahi.
           </h2>
 
           <p className="text-base sm:text-lg text-ink-muted font-light leading-relaxed max-w-2xl mb-12">
-            In modern software, everything is hoarded and mined forever. Ephemera embraces the
-            elegance of physical impermanence. When the gathering concludes, the hosts freeze
-            one master tapestry of the evening. Then, the individual uploads, raw files, and
-            guest records are permanently disposed.
+            Most apps keep your photos forever. Mehfil doesn't. After the function, the host saves
+            one final collage, and every guest photo and record is deleted for good. Your family's
+            photos are never sold, shared or used for anything else.
+            
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full text-left">
             <div className="p-6 rounded-xl border border-ink/10 bg-ivory">
               <ShieldCheck className="w-6 h-6 text-sepia mb-3" />
-              <h4 className="font-editorial text-xl font-normal text-ink mb-1">Total Privacy</h4>
+              <h4 className="font-editorial text-xl font-normal text-ink mb-1">Privacy first</h4>
               <p className="text-xs text-ink-muted leading-relaxed font-light">
-                Phone numbers are hashed via cryptographic HMAC. Raw numbers are never saved to our database.
+                Guests are identified by a scrambled code, never by their phone number. Nobody can read it back.
               </p>
             </div>
 
             <div className="p-6 rounded-xl border border-ink/10 bg-ivory">
               <Layers className="w-6 h-6 text-sepia mb-3" />
-              <h4 className="font-editorial text-xl font-normal text-ink mb-1">Archival Tapestry</h4>
+              <h4 className="font-editorial text-xl font-normal text-ink mb-1">Album-ready collage</h4>
               <p className="text-xs text-ink-muted leading-relaxed font-light">
-                The entire collection is rendered into a master print-ready file for the wedding album or host keepsake.
+                The whole wall becomes one high-quality image. Print it for the album or frame it for the family.
               </p>
             </div>
 
             <div className="p-6 rounded-xl border border-ink/10 bg-ivory">
               <Trash2 className="w-6 h-6 text-sepia mb-3" />
-              <h4 className="font-editorial text-xl font-normal text-ink mb-1">The Disposal Ritual</h4>
+              <h4 className="font-editorial text-xl font-normal text-ink mb-1">Delete after the function</h4>
               <p className="text-xs text-ink-muted leading-relaxed font-light">
-                A verified one-click purge dissolves the temporary files, leaving only the collective memory intact.
+                One click deletes every guest photo. Only the final collage stays with you.
               </p>
             </div>
           </div>
@@ -445,17 +448,18 @@ export default function Home() {
       {/* Final Call to Action */}
       <section className="py-24 bg-paper-light px-6 text-center">
         <div className="max-w-2xl mx-auto flex flex-col items-center">
+          <FlourishDivider className="mb-5" width={220} />
           <h2 className="font-editorial text-4xl md:text-5xl font-normal text-ink mb-4">
-            Host your own memory wall.
+            Planning a function? Start your mehfil.
           </h2>
           <p className="text-ink-muted font-light text-base mb-8">
-            Create an event in 30 seconds. Get an instant, printable QR code to place on tables tonight.
+            Set up in 30 seconds. Get a QR code you can print and put on every table tonight.
           </p>
           <Link
             href="/create"
             className="btn-editorial btn-editorial-primary text-base px-8 py-4 shadow-md"
           >
-            <span>Create your event</span>
+            <span>Start your mehfil</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

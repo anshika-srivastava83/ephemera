@@ -18,6 +18,7 @@ import {
 
 import { useHostRole } from '../../lib/useHostRole';
 import { ToastProvider } from '../ui/Toast';
+import { AccessDenied } from '../brand/AccessDenied';
 
 
 // Pulls the event id out of /events/:id/* or /owner/event/:id/*
@@ -59,8 +60,8 @@ export function HostShell({ children }) {
         { href: `/events/${eventId}/team`, icon: Users, label: 'Team & Roles' },
         ...(isOwner
           ? [
-              { href: `/events/${eventId}/tapestry`, icon: Frame, label: 'Finalise' },
-              { href: `/events/${eventId}/disposal`, icon: Flame, label: 'Dispose' },
+              { href: `/events/${eventId}/tapestry`, icon: Frame, label: 'Final collage' },
+              { href: `/events/${eventId}/disposal`, icon: Flame, label: 'Delete photos' },
             ]
           : []),
       ]
@@ -70,13 +71,33 @@ export function HostShell({ children }) {
     it.exact ? pathname === it.href : pathname === it.href || pathname.startsWith(`${it.href}/`);
 
 
+  // Don't render any host UI until the role check has finished: otherwise the
+  // dashboard flashes on screen and is then replaced by "access denied".
+  if (!roleLoaded) {
+    return (
+      <div className="theme-owner min-h-screen flex items-center justify-center" role="status" aria-live="polite">
+        <div className="flex flex-col items-center gap-3 text-ink-muted">
+          <img src="/logo.png" alt="" className="h-10 w-auto opacity-80 animate-pulse" />
+          <span className="text-xs uppercase tracking-widest">Verifying access…</span>
+        </div>
+      </div>
+    );
+  }
+  if (!role) {
+    return (
+      <div className="theme-owner">
+        <AccessDenied />
+      </div>
+    );
+  }
+
   return (
     <ToastProvider>
       <div className="theme-owner min-h-screen text-ink">
         <aside className="host-sidebar" aria-label="Host navigation">
-          <Link href="/" className="host-brand" aria-label="Ephemera home">
-            <span className="font-editorial text-[22px] leading-none">E</span>
-            <span className="host-nav-label font-editorial text-xl">phemera</span>
+          <Link href="/" className="host-brand flex items-center gap-2 px-2" aria-label="Mehfil home">
+            <img src="/logo.png" alt="Mehfil" className="h-7 w-auto object-contain shrink-0" />
+            <span className="host-nav-label font-editorial text-lg tracking-tight">Mehfil</span>
           </Link>
 
           <nav className="host-nav">

@@ -12,6 +12,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        // Vercel Blob public store (guest photos, polaroids, wall artwork)
+        protocol: 'https',
+        hostname: '*.public.blob.vercel-storage.com',
+      },
     ],
   },
   async headers() {
@@ -32,6 +37,15 @@ const nextConfig = {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
           },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+          {
+            // Guests use the camera; everything else is switched off
+            key: 'Permissions-Policy',
+            value: 'camera=(self), microphone=(), geolocation=(), payment=()',
+          },
         ],
       },
       {
@@ -45,18 +59,9 @@ const nextConfig = {
         ],
       },
       {
-        // Optimized caching for public uploads
-        source: '/uploads/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=604800',
-          },
-        ],
-      },
-      {
         // Strict privacy for all APIs: NEVER cache private event photos or guest submissions
-        source: '/api/(.*)',
+        // (the public wall feed sets its own short CDN cache)
+        source: '/api/((?!events/[^/]+/approved-submissions).*)',
         headers: [
           {
             key: 'Cache-Control',

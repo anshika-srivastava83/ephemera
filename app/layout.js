@@ -3,13 +3,17 @@ import { MotionRoot } from '../components/MotionRoot';
 import './globals.css';
 
 export const metadata = {
-  title: 'Ephemera — A Living Tapestry of Celebrated Moments',
+  title: 'Mehfil: One Photo Wall for Every Shaadi & Celebration',
   description:
-    'An interactive, communal photography experience for weddings, gatherings, and celebrations. Guests scan a table QR, snap candid Polaroid moments, and build a live projection wall in real time.',
-  keywords: ['polaroid wall', 'wedding photography', 'communal memories', 'live photo wall', 'ephemeral events'],
+    'Guests scan a QR on the table, click photos, and watch them appear live on the big screen. For shaadis, sangeets, birthdays and every get-together. No app needed.',
+  keywords: ['mehfil', 'polaroid wall', 'wedding photography', 'shaadi photos', 'live photo wall', 'celebration'],
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
   openGraph: {
-    title: 'Ephemera — Some nights deserve to stay together',
-    description: 'Every guest brings a memory. Every memory finds its place.',
+    title: 'Mehfil: Saari yaadein, ek deewar par',
+    description: 'Scan the table QR. Click a photo. See it live on the big screen.',
     type: 'website',
   },
 };

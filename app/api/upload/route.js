@@ -1,87 +1,53 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import sharp from 'sharp';
+import { handleUpload } from '@vercel/blob/client';
+import { getEventById } from '../../../lib/dataService';
+import { isUuid } from '../../../lib/storage';
 
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB limit
-const ALLOWED_MIME_PREFIX = 'image/';
+export const dynamic = 'force-dynamic';
 
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB hard ceiling (browser pre-shrinks photos)
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+/**
+ * Client-upload token endpoint for Vercel Blob. The browser uploads straight
+ * to Blob storage, so photos never pass through (or get limited by) this
+ * serverless function. We only decide *whether* an upload may happen.
+ */
 export async function POST(request) {
+  let body;
   try {
-    const formData = await request.formData();
-    const file = formData.get('file');
-    const folder = (formData.get('folder') || 'general').replace(/[^a-zA-Z0-9_-]/g, '');
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
 
-    if (!file || typeof file === 'string') {
-      return NextResponse.json({ error: 'No image file was provided' }, { status: 400 });
-    }
+  try {
+    const json = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async (pathname) => {
+        // Uploads must live under <eventId>/ and the event must exist.
+        const [eventId, ...rest] = pathname.split('/');
+        if (!isUuid(eventId) || rest.length !== 1 || !/^[a-zA-Z0-9_-]{1,60}\.(jpg|png)$/.test(rest[0])) {
+          throw new Error('Invalid upload path');
+        }
+        const event = await getEventById(eventId);
+        if (!event) throw new Error('Event not found');
 
-    // Verify MIME type
-    if (file.type && !file.type.startsWith(ALLOWED_MIME_PREFIX)) {
-      return NextResponse.json(
-        { error: `Invalid file type (${file.type}). Only photographic images are accepted.` },
-        { status: 400 }
-      );
-    }
-
-    // Verify file size limit
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: 'Photo is too large. Maximum allowed size is 15MB.' },
-        { status: 400 }
-      );
-    }
-
-    const bytes = await file.arrayBuffer();
-    const inputBuffer = Buffer.from(bytes);
-
-    // Target upload directory
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', folder);
-    await mkdir(uploadsDir, { recursive: true });
-
-    const isPng = file.name && file.name.endsWith('.png');
-    let outputBuffer;
-    let extension = '.jpg';
-
-    try {
-      if (isPng) {
-        // Preserve PNG for master tapestries
-        outputBuffer = await sharp(inputBuffer)
-          .rotate()
-          .png({ quality: 95, compressionLevel: 8 })
-          .toBuffer();
-        extension = '.png';
-      } else {
-        // Optimize photographic uploads
-        outputBuffer = await sharp(inputBuffer)
-          .rotate() // auto-orient based on EXIF
-          .resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality: 90, mozjpeg: true })
-          .toBuffer();
-        extension = '.jpg';
-      }
-    } catch (sharpError) {
-      console.warn('Sharp optimization fallback:', sharpError.message);
-      outputBuffer = inputBuffer;
-      extension = path.extname(file.name || '.jpg') || '.jpg';
-    }
-
-    const cleanBase = path.basename(file.name || 'photo', path.extname(file.name || ''))
-      .replace(/[^a-zA-Z0-9_-]/g, '') || 'snap';
-    const filename = `${Date.now()}-${cleanBase}${extension}`;
-    const filePath = path.join(uploadsDir, filename);
-
-    await writeFile(filePath, outputBuffer);
-
-    const publicUrl = `/uploads/${folder}/${filename}`;
-    return NextResponse.json({
-      url: publicUrl,
-      filename,
-      sizeBytes: outputBuffer.length,
-      success: true,
+        return {
+          allowedContentTypes: ALLOWED_TYPES,
+          maximumSizeInBytes: MAX_FILE_SIZE,
+          addRandomSuffix: true, // never overwrite another guest's photo
+          tokenPayload: JSON.stringify({ eventId }),
+        };
+      },
+      onUploadCompleted: async () => {
+        // Nothing to do: the submission record is created by /api/submissions.
+      },
     });
+    return NextResponse.json(json);
   } catch (error) {
-    console.error('Server upload error:', error);
-    return NextResponse.json({ error: error.message || 'Upload processing failed' }, { status: 500 });
+    console.error('Upload token error:', error.message);
+    return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 400 });
   }
 }

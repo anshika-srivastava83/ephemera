@@ -52,10 +52,8 @@ export default function LiveProjectionWall({ params }) {
     async function fetchWallData() {
       if (isPaused) return;
       try {
-        const res = await fetch(`/api/events/${eventId}/approved-submissions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
+        // GET so the CDN can serve one cached copy to every viewer (see route)
+        const res = await fetch(`/api/events/${eventId}/approved-submissions`);
         const data = await res.json();
         const approved = data.submissions || [];
 
@@ -160,18 +158,18 @@ export default function LiveProjectionWall({ params }) {
       {/* Empty State if no photos approved yet */}
       {submissions.length === 0 && (
         <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-10">
-          <div className="w-16 h-16 rounded-full border border-darkroom-border flex items-center justify-center mb-6 text-rose">
-            <Sparkles className="w-8 h-8" />
+          <div className="mb-4">
+            <img src="/logo-white.png" alt="Mehfil" className="h-16 w-auto object-contain mx-auto opacity-90" />
           </div>
           <h1 className="font-editorial text-4xl sm:text-6xl text-ivory font-normal mb-3">
-            {event?.name || 'The Ephemera Wall'}
+            {event?.name || 'Mehfil'}
           </h1>
           <p className="font-light text-ivory/60 text-lg max-w-md mb-8">
-            The projection is waiting for its first memory.
-            Scan the table QR card to pin your photograph here.
+            Waiting for the first photo.
+            Scan the QR on your table and send a photo. It will show up here.
           </p>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-darkroom-border text-xs text-rose-light">
-            <span>Live projection active</span>
+            <span>Live now</span>
             <span className="w-2 h-2 rounded-full bg-rose animate-ping" />
           </div>
         </div>
@@ -264,7 +262,7 @@ export default function LiveProjectionWall({ params }) {
                 onClick={() => setSelectedPhoto(null)}
                 className="mt-6 mx-auto block btn-editorial btn-editorial-secondary text-xs px-5 py-2 text-ivory border-darkroom-border hover:bg-white/10"
               >
-                Return to Living Wall
+                Back to the live wall
               </button>
             </motion.div>
           </motion.div>
@@ -318,13 +316,16 @@ export default function LiveProjectionWall({ params }) {
       </div>
 
       {/* Subtle venue title watermark in top-left */}
-      <div className="fixed top-6 left-6 z-30 pointer-events-none opacity-40 hover:opacity-90 transition-opacity">
-        <span className="font-editorial text-2xl text-ivory block leading-none">
-          {event?.name || 'Ephemera'}
-        </span>
-        <span className="text-[10px] uppercase tracking-widest text-ivory/60 block mt-1">
-          {submissions.length} Memory Prints Recorded
-        </span>
+      <div className="fixed top-6 left-6 z-30 pointer-events-none opacity-50 hover:opacity-90 transition-opacity flex items-center gap-3">
+        <img src="/logo-white.png" alt="Mehfil" className="h-8 md:h-10 w-auto object-contain" />
+        <div>
+          <span className="font-editorial text-xl md:text-2xl text-ivory block leading-none">
+            {event?.name || 'Mehfil'}
+          </span>
+          <span className="text-[10px] uppercase tracking-widest text-ivory/60 block mt-1">
+            {submissions.length} Memory Prints Recorded
+          </span>
+        </div>
       </div>
     </div>
   );

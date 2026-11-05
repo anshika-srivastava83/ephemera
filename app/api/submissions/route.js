@@ -9,6 +9,7 @@ import {
   getEventById,
 } from '../../../lib/dataService';
 import { submissionSchema, formatZodErrors } from '../../../lib/validation';
+import { isEventUpload } from '../../../lib/storage';
 
 export async function GET(request) {
   try {
@@ -33,14 +34,16 @@ export async function GET(request) {
     }
 
     if (email) {
+      // Never hand out the access token here: anyone could look up an email.
+      // The token only reaches the guest through their emailed link.
       const result = await getSubmissionByEmail(eventId, email);
-      return NextResponse.json(result);
+      return NextResponse.json({ ...result, accessToken: null });
     }
 
     if (phone) {
       const phone_hash = hashPhone(phone);
       const result = await getSubmissionByPhone(eventId, phone_hash);
-      return NextResponse.json(result);
+      return NextResponse.json({ ...result, email: null, accessToken: null });
     }
 
     return NextResponse.json({ error: 'email or phone is required' }, { status: 400 });
@@ -66,7 +69,14 @@ export async function POST(request) {
       );
     }
 
-    const { eventId, email, phone, caption, photoUrl, polaroidUrl, reuseConsent } = parsed.data;
+    let { eventId, email, phone, caption, photoUrl, polaroidUrl, reuseConsent } = parsed.data;
+    if (!polaroidUrl) {
+      polaroidUrl = photoUrl;
+    }
+
+    if (!isEventUpload(photoUrl, eventId) || !isEventUpload(polaroidUrl, eventId)) {
+      return NextResponse.json({ error: 'Photo was not uploaded for this event.' }, { status: 400 });
+    }
 
     const event = await getEventById(eventId);
     if (!event) {
@@ -95,7 +105,7 @@ export async function POST(request) {
 
     if (normalizedEmail) {
       try {
-        const origin = new URL(request.url).origin;
+        const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
         const link = accessToken
           ? `${origin}/event/${eventId}/me?token=${accessToken}`
           : `${origin}/event/${eventId}/me`;
@@ -128,6 +138,10 @@ export async function POST(request) {
     });
   } catch (err) {
     console.error('Error saving submission:', err);
-    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+    const known = /submission limit|no longer accepting|not found/i.test(err.message || '');
+    return NextResponse.json(
+      { error: known ? err.message : 'Something went wrong saving your photo. Please try again.' },
+      { status: known ? 409 : 500 }
+    );
   }
 }

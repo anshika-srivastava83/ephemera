@@ -1,5 +1,7 @@
 'use client';
 
+import { uploadImage } from '../../../../lib/clientUpload';
+
 import { useState, useRef, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { toPng } from 'html-to-image';
@@ -115,15 +117,11 @@ export default function FinalArtworkPage({ params }) {
 
       setStage('upload');
       const blob = await (await fetch(dataUrl)).blob();
-      const formData = new FormData();
-      formData.append('file', blob, `master-artwork-${eventId}.png`);
-      formData.append('folder', eventId);
-      const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-      const uploadData = await uploadRes.json().catch(() => ({}));
-      if (!uploadRes.ok || !uploadData.url) {
-        throw new Error(uploadData.error || 'The artwork image could not be saved on the server.');
+      try {
+        uploadedUrl = await uploadImage(blob, 'master-artwork', eventId);
+      } catch (uploadErr) {
+        throw new Error(uploadErr.message || 'The artwork image could not be saved on the server.');
       }
-      uploadedUrl = uploadData.url;
 
       setStage('commit');
       const res = await fetch(`/api/events/${eventId}/finalize`, {
@@ -147,7 +145,7 @@ export default function FinalArtworkPage({ params }) {
 
       // Give the host a copy straight away
       const link = document.createElement('a');
-      link.download = `${(event?.name || 'ephemera').replace(/[^\w-]+/g, '-')}-wall.png`;
+      link.download = `${(event?.name || 'mehfil').replace(/[^\w-]+/g, '-')}-wall.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -182,7 +180,7 @@ export default function FinalArtworkPage({ params }) {
         {loadState === 'loading' && (
           <div className="py-24 text-center text-ink-muted" role="status">
             <Loader2 className="w-7 h-7 animate-spin mx-auto text-sepia mb-3" />
-            <p className="font-editorial text-2xl">Gathering the night…</p>
+            <p className="font-editorial text-2xl">Loading photos…</p>
           </div>
         )}
 
@@ -269,7 +267,7 @@ export default function FinalArtworkPage({ params }) {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-6">
                   <a
                     href={finalImageUrl}
-                    download={`${(event.name || 'ephemera').replace(/[^\w-]+/g, '-')}-wall.png`}
+                    download={`${(event.name || 'mehfil').replace(/[^\w-]+/g, '-')}-wall.png`}
                     className="btn-editorial btn-editorial-primary px-6 py-3 text-sm w-full sm:w-auto"
                   >
                     <Download className="w-4 h-4" />
@@ -306,7 +304,7 @@ export default function FinalArtworkPage({ params }) {
                     <ImageIcon className="w-8 h-8 mx-auto text-sepia/60 mb-3" />
                     <p className="font-editorial text-3xl text-ink mb-1">Nothing to finalise yet</p>
                     <p className="text-sm text-ink-muted font-light mb-5">
-                      Approve some photographs first — they become the artwork.
+                      Approve some photos first. They will make up the collage.
                     </p>
                     <Link
                       href={`/events/${eventId}/moderate`}

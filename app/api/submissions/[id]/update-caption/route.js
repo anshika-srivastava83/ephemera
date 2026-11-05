@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { isOwner } from '../../../../../lib/auth';
+import { isEventUpload } from '../../../../../lib/storage';
 import { updateSubmissionCaption, getEventIdBySubmissionId } from '../../../../../lib/dataService';
 import { captionUpdateSchema, formatZodErrors } from '../../../../../lib/validation';
 
@@ -21,6 +22,10 @@ export async function POST(request, { params }) {
         { error: 'Only event owners can edit captions.' },
         { status: 403 }
       );
+    }
+
+    if (polaroidUrl && !isEventUpload(polaroidUrl, eventId)) {
+      return NextResponse.json({ error: 'Invalid image URL.' }, { status: 400 });
     }
 
     const submission = await updateSubmissionCaption(params.id, caption || '', polaroidUrl);
