@@ -1,98 +1,85 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../lib/supabaseClient';
-import { isOwner, isOwnerOrCollaborator } from '../../../lib/auth';
+import { getRole, isOwner, getCurrentUserEmail } from '../../../lib/auth';
+import { getEvents, createEvent } from '../../../lib/dataService';
+import { createEventSchema, formatZodErrors } from '../../../lib/validation';
 
-// POST /api/events  { name, ownerPassword }
-// Creates a brand-new event -> a brand-new event id -> a brand-new QR.
 export async function POST(request) {
-  const { name, ownerPassword, maxSubmissions, location, scheduledAt } = await request.json();
+  try {
+    const body = await request.json();
 
-  if (!isOwner(ownerPassword)) {
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
-  }
-  if (!name) {
-    return NextResponse.json({ error: 'Event name is required' }, { status: 400 });
-  }
+    if (!(await isOwner(body?.password))) {
+      return NextResponse.json(
+        { error: 'Only event owners can create events.' },
+        { status: 403 }
+      );
+    }
 
-  // No real login yet (that's the V2 plan), so owner_id is just a
-  // placeholder random id for now -- it's not used for permission checks
-  // in V1, the shared password is.
-  const { data, error } = await supabaseAdmin()
-    .from('events')
-    .insert({
+    // Server-side Zod validation
+    const parsed = createEventSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: 'Please correct the highlighted errors.',
+          fieldErrors: formatZodErrors(parsed.error),
+        },
+        { status: 400 }
+      );
+    }
+
+    const { name, maxSubmissions, location, scheduledAt } = parsed.data;
+    const creatorEmail = await getCurrentUserEmail();
+
+    const event = await createEvent({
       name,
-      status: 'open',
-      owner_id: crypto.randomUUID(),
-      max_submissions: maxSubmissions && maxSubmissions > 0 ? maxSubmissions : 500,
-      location: location || null,
-      scheduled_at: scheduledAt || null,
-    })
-    .select()
-    .single();
+      location,
+      scheduledAt,
+      maxSubmissions,
+      creatorEmail,
+    });
 
+<<<<<<< HEAD
   if (error) {
     console.error('Create event failed:', error);
     return NextResponse.json({ error: error.message, code: error.code, details: error.details, hint: error.hint }, { status: 500 });
   }
   return NextResponse.json({ event: data });
+=======
+    return NextResponse.json({ event, success: true });
+  } catch (err) {
+    console.error('Error creating event:', err);
+    return NextResponse.json({ error: err.message || 'Server error' }, { status: 500 });
+  }
+>>>>>>> 0e3d06a777cdb48b9bc5717f64ce67e0e91eb2b9
 }
 
-// GET /api/events?password=...
-// Lists all events (owner and collaborator both see everything), each with
-// its pending/approved submission counts. Returns the caller's role so the
-// UI can show/hide owner-only controls.
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const password = searchParams.get('password');
+  try {
+    const url = new URL(request.url);
+    const eventId = url.searchParams.get('eventId') || undefined;
+    const role = await getRole(eventId);
+    // Lightweight check used by the host shell: skip loading every event
+    if (url.searchParams.get('roleOnly') === '1') {
+      return NextResponse.json({ role });
+    }
+    const events = await getEvents(role);
 
-  // No password: return a bare public list (no counts, no role) so the
-  // dashboard can show event name/date/location before login.
-  if (!password) {
-    const { data, error } = await supabaseAdmin()
-      .from('events')
-      .select('id, name, status, location, scheduled_at, created_at')
-      .order('created_at', { ascending: false });
+    if (!role) {
+      // Public sanitized view without internal counts
+      const publicList = events.map((ev) => ({
+        id: ev.id,
+        name: ev.name,
+        status: ev.status,
+        location: ev.location,
+        scheduled_at: ev.scheduled_at,
+        chosen_layout_id: ev.chosen_layout_id,
+        created_at: ev.created_at,
+      }));
+      return NextResponse.json({ events: publicList, role: null });
+    }
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ events: data, role: null });
+    return NextResponse.json({ events, role });
+  } catch (err) {
+    console.error('Error getting events:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
-
-  if (!isOwnerOrCollaborator(password)) {
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
-  }
-
-  const { data, error } = await supabaseAdmin()
-    .from('events')
-    .select('id, name, status, created_at')
-    .order('created_at', { ascending: false });
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  // Pull pending/approved counts for all these events in one query, then
-  // tally them in JS -- simpler than a grouped SQL query for this scale.
-  const eventIds = data.map((ev) => ev.id);
-  const { data: submissionCounts, error: countError } = await supabaseAdmin()
-    .from('submissions')
-    .select('event_id, status')
-    .in('event_id', eventIds);
-
-  if (countError) return NextResponse.json({ error: countError.message }, { status: 500 });
-
-  const countsByEvent = {};
-  for (const row of submissionCounts) {
-    if (!countsByEvent[row.event_id]) countsByEvent[row.event_id] = { pending: 0, approved: 0 };
-    if (row.status === 'pending') countsByEvent[row.event_id].pending++;
-    if (row.status === 'approved') countsByEvent[row.event_id].approved++;
-  }
-
-  const eventsWithCounts = data.map((ev) => ({
-    ...ev,
-    pendingCount: countsByEvent[ev.id]?.pending || 0,
-    approvedCount: countsByEvent[ev.id]?.approved || 0,
-  }));
-
-  return NextResponse.json({
-    events: eventsWithCounts,
-    role: isOwner(password) ? 'owner' : 'collaborator',
-  });
 }

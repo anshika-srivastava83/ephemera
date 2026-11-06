@@ -149,3 +149,6 @@ node_modules/
 *.log
 structure.txt
 .env*
+public/uploads/*
+!public/uploads/.gitkeep
+

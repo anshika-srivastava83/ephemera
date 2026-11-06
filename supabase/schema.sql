@@ -6,6 +6,7 @@ create table events (
   location text,
   scheduled_at timestamptz,
   owner_id uuid not null,
+  owner_email text,
   status text not null default 'open',
   max_submissions integer not null default 500,
   chosen_layout_id text,
@@ -15,11 +16,17 @@ create table events (
 );
 
 create table event_collaborators (
+  id uuid primary key default uuid_generate_v4(),
   event_id uuid not null references events(id) on delete cascade,
-  user_id uuid not null,
+  email text not null,
+  role text not null default 'collaborator', -- 'host' or 'collaborator'
   added_at timestamptz not null default now(),
-  primary key (event_id, user_id)
+  added_by text,
+  constraint event_collaborators_event_email_unique unique (event_id, email)
 );
+
+create index idx_event_collaborators_email on event_collaborators (lower(email));
+create index idx_event_collaborators_event on event_collaborators (event_id);
 
 create table submissions (
   id uuid primary key default uuid_generate_v4(),

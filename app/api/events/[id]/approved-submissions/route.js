@@ -1,19 +1,28 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '../../../../../lib/supabaseClient';
-import { isOwnerOrCollaborator } from '../../../../../lib/auth';
+import { getApprovedSubmissions } from '../../../../../lib/dataService';
+import { isUuid } from '../../../../../lib/storage';
 
-export async function POST(request, { params }) {
-  const { ownerPassword } = await request.json();
-  if (!isOwnerOrCollaborator(ownerPassword)) {
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
+// Public: feeds the live wall and landing preview. Only returns approved
+// photos and non-identifying fields.
+//
+// Scaling: the wall polls this every few seconds from every open screen.
+// Letting the CDN cache the response for 3s means the database sees roughly
+// one query per event per 3s no matter how many people are watching.
+async function handle(_request, { params }) {
+  try {
+    if (!isUuid(params.id)) {
+      return NextResponse.json({ submissions: [] });
+    }
+    const submissions = await getApprovedSubmissions(params.id);
+    return NextResponse.json(
+      { submissions },
+      { headers: { 'Cache-Control': 'public, s-maxage=3, stale-while-revalidate=15' } }
+    );
+  } catch (err) {
+    console.error('Error fetching approved submissions:', err);
+    return NextResponse.json({ error: 'Could not load photos' }, { status: 500 });
   }
-
-  const { data, error } = await supabaseAdmin()
-    .from('submissions')
-    .select('id, photo_url, polaroid_url, caption, reuse_consent')
-    .eq('event_id', params.id)
-    .eq('status', 'approved');
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ submissions: data });
 }
+
+export const GET = handle;
+export const POST = handle;
